@@ -1,3 +1,21 @@
+rubygems (1.7.2-1) unstable; urgency=low
+
+  * New upstream release.
+  * Switch to gem2deb-based packaging. Rename source and binary packages.
+  * Drop 50_add_missing_require_yaml.diff: fixed upstream.
+  * Change 01_default_gem_path.diff:
+    + executables are now installed to /usr/local/bin.
+    + but the other files created by rubygems stay in /var/lib/gems/1.8.
+    Several commenters in #448639 and #403407 argued in favor of the switch to
+    /usr/local/bin. Those two bugs can therefore be closed. However, the issue
+    is not completely solved, as rubygems still installs files in /var/lib/gems.
+    Nobody in the bug logs explained why that was an issue. If you care about
+    it, please open a new bug. Closes: #448639, #403407
+  * Add disable-failing-tests.diff: disable tests that are failing due to
+    Debian-specific changes to rubygems.
+
+ -- Lucas Nussbaum <lucas@lucas-nussbaum.net>  Thu, 28 Apr 2011 16:21:57 +0200
+
 libgems-ruby (1.6.2-1) unstable; urgency=low
 
   * New upstream release

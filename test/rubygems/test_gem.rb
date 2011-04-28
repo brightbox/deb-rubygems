@@ -406,22 +406,6 @@ class TestGem < Gem::TestCase
     assert_activate %w[d-1 e-1], e1, "d"
   end
 
-  def test_self_all_load_paths
-    util_make_gems
-
-    expected = [
-      File.join(@gemhome, *%W[gems #{@a1.full_name} lib]),
-      File.join(@gemhome, *%W[gems #{@a2.full_name} lib]),
-      File.join(@gemhome, *%W[gems #{@a3a.full_name} lib]),
-      File.join(@gemhome, *%W[gems #{@a_evil9.full_name} lib]),
-      File.join(@gemhome, *%W[gems #{@b2.full_name} lib]),
-      File.join(@gemhome, *%W[gems #{@c1_2.full_name} lib]),
-      File.join(@gemhome, *%W[gems #{@pl1.full_name} lib]),
-    ]
-
-    assert_equal expected, Gem.all_load_paths.sort
-  end
-
   def test_self_available?
     util_make_gems
     assert(Gem.available?("a"))
@@ -440,16 +424,6 @@ class TestGem < Gem::TestCase
     assert_equal @abin_path, Gem.bin_path('a', 'abin', '4')
   end
 
-  def test_self_bin_path_name
-    util_exec_gem
-    assert_equal @exec_path, Gem.bin_path('a')
-  end
-
-  def test_self_bin_path_name_version
-    util_exec_gem
-    assert_equal @exec_path, Gem.bin_path('a', nil, '4')
-  end
-
   def test_self_bin_path_nonexistent_binfile
     quick_spec 'a', '2' do |s|
       s.executables = ['exec']
@@ -461,14 +435,14 @@ class TestGem < Gem::TestCase
 
   def test_self_bin_path_no_bin_file
     quick_spec 'a', '1'
-    assert_raises(Gem::Exception) do
+    assert_raises(ArgumentError) do
       Gem.bin_path('a', nil, '1')
     end
   end
 
   def test_self_bin_path_not_found
     assert_raises(Gem::GemNotFoundException) do
-      Gem.bin_path('non-existent')
+      Gem.bin_path('non-existent', 'blah')
     end
   end
 
@@ -476,7 +450,6 @@ class TestGem < Gem::TestCase
     util_exec_gem
     quick_spec 'a', '10' do |s|
       s.executables = []
-      s.default_executable = nil
     end
     # Should not find a-10's non-abin (bug)
     assert_equal @abin_path, Gem.bin_path('a', 'abin')
@@ -690,20 +663,6 @@ class TestGem < Gem::TestCase
     assert_equal expected, Gem.find_files('sff/**.rb'), '[ruby-core:31730]'
   ensure
     assert_equal cwd, $LOAD_PATH.shift
-  end
-
-  def test_self_latest_load_paths
-    util_make_gems
-
-    expected = [
-      File.join(@gemhome, *%W[gems #{@a3a.full_name} lib]),
-      File.join(@gemhome, *%W[gems #{@a_evil9.full_name} lib]),
-      File.join(@gemhome, *%W[gems #{@b2.full_name} lib]),
-      File.join(@gemhome, *%W[gems #{@c1_2.full_name} lib]),
-      File.join(@gemhome, *%W[gems #{@pl1.full_name} lib]),
-    ]
-
-    assert_equal expected, Gem.latest_load_paths.sort
   end
 
   def test_self_loaded_specs
@@ -1115,7 +1074,6 @@ class TestGem < Gem::TestCase
 
   def util_exec_gem
     spec, _ = quick_spec 'a', '4' do |s|
-      s.default_executable = 'exec'
       s.executables = ['exec', 'abin']
     end
 

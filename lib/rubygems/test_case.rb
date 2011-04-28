@@ -310,7 +310,6 @@ class Gem::TestCase < MiniTest::Unit::TestCase
       s.author      = 'A User'
       s.email       = 'example@example.com'
       s.homepage    = 'http://example.com'
-      s.has_rdoc    = true
       s.summary     = "this is a summary"
       s.description = "This is a test description"
 
@@ -319,12 +318,12 @@ class Gem::TestCase < MiniTest::Unit::TestCase
 
     path = File.join "specifications", spec.spec_name
     written_path = write_file path do |io|
-      io.write(spec.to_ruby)
+      io.write spec.to_ruby_for_cache
     end
 
-    spec.loaded_from = written_path
+    spec.loaded_from = spec.loaded_from = written_path
 
-    Gem.source_index.add_spec spec
+    Gem.source_index.add_spec spec.for_cache
 
     return spec
   end
@@ -339,14 +338,14 @@ class Gem::TestCase < MiniTest::Unit::TestCase
       s.author      = 'A User'
       s.email       = 'example@example.com'
       s.homepage    = 'http://example.com'
-      s.has_rdoc    = true
       s.summary     = "this is a summary"
       s.description = "This is a test description"
 
       yield(s) if block_given?
     end
 
-    spec.loaded_from = @gemhome
+    path = File.join @gemhome, "specifications", spec.spec_name
+    spec.loaded_from = path
 
     Gem.source_index.add_spec spec
 
@@ -605,8 +604,8 @@ Also, a list:
   # Best used with +@all_gems+ from #util_setup_fake_fetcher.
 
   def util_setup_spec_fetcher(*specs)
-    specs = Hash[*specs.map { |spec| [spec.full_name, spec] }.flatten]
-    si = Gem::SourceIndex.new specs
+    si = Gem::SourceIndex.new
+    si.add_specs(*specs)
 
     spec_fetcher = Gem::SpecFetcher.fetcher
 

@@ -5,11 +5,9 @@
 ## DP: Disable gem update --system functionality, as it can break things. Users should use apt instead
 
 @DPATCH@
-Index: libgems-ruby/lib/rubygems/commands/update_command.rb
-===================================================================
---- libgems-ruby.orig/lib/rubygems/commands/update_command.rb	2011-03-04 09:01:24.000000000 +0900
-+++ libgems-ruby/lib/rubygems/commands/update_command.rb	2011-03-11 20:41:46.069813644 +0900
-@@ -128,6 +128,12 @@
+--- a/lib/rubygems/commands/update_command.rb
++++ b/lib/rubygems/commands/update_command.rb
+@@ -128,6 +128,12 @@ class Gem::Commands::UpdateCommand < Gem
    # Update RubyGems software to the latest version.
  
    def update_rubygems

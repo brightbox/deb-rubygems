@@ -1,0 +1,77 @@
+Description: disable tests that are failing due to Debian-specific modifications to Rubygems.
+--- a/test/rubygems/test_gem.rb
++++ b/test/rubygems/test_gem.rb
+@@ -461,7 +461,7 @@ class TestGem < Gem::TestCase
+     assert_equal File.join(@gemhome, 'bin'), Gem.bindir(Pathname.new(Gem.dir))
+   end
+ 
+-  def test_self_bindir_default_dir
++  def est_self_bindir_default_dir
+     default = Gem.default_dir
+     bindir = if defined?(RUBY_FRAMEWORK_VERSION) then
+                '/usr/bin'
+@@ -520,7 +520,7 @@ class TestGem < Gem::TestCase
+     assert_nil Gem.datadir('xyzzy')
+   end
+ 
+-  def test_self_default_dir
++  def est_self_default_dir
+     assert_match @default_dir_re, Gem.default_dir
+   end
+ 
+--- a/test/rubygems/test_gem_commands_update_command.rb
++++ b/test/rubygems/test_gem_commands_update_command.rb
+@@ -82,7 +82,7 @@ class TestGemCommandsUpdateCommand < Gem
+     end
+   end
+ 
+-  def test_execute_system
++  def est_execute_system
+     util_setup_rubygem9
+     util_setup_spec_fetcher @rubygem9
+     util_add_to_fetcher @rubygem9
+@@ -106,7 +106,7 @@ class TestGemCommandsUpdateCommand < Gem
+     assert_empty out
+   end
+ 
+-  def test_execute_system_at_latest
++  def est_execute_system_at_latest
+     util_setup_rubygem_current
+     util_setup_spec_fetcher @rubygem_current
+     util_add_to_fetcher @rubygem_current
+@@ -128,7 +128,7 @@ class TestGemCommandsUpdateCommand < Gem
+     assert_empty out
+   end
+ 
+-  def test_execute_system_multiple
++  def est_execute_system_multiple
+     util_setup_rubygem9
+     util_setup_rubygem8
+     util_setup_spec_fetcher @rubygem8, @rubygem9
+@@ -153,7 +153,7 @@ class TestGemCommandsUpdateCommand < Gem
+     assert_empty out
+   end
+ 
+-  def test_execute_system_specific
++  def est_execute_system_specific
+     util_clear_gems
+     util_setup_rubygem9
+     util_setup_rubygem8
+@@ -178,7 +178,7 @@ class TestGemCommandsUpdateCommand < Gem
+     assert_empty out
+   end
+ 
+-  def test_execute_system_specifically_to_latest_version
++  def est_execute_system_specifically_to_latest_version
+     util_clear_gems
+     util_setup_rubygem9
+     util_setup_rubygem8
+@@ -203,7 +203,7 @@ class TestGemCommandsUpdateCommand < Gem
+     assert_empty out
+   end
+ 
+-  def test_execute_system_with_gems
++  def est_execute_system_with_gems
+     @cmd.options[:args]          = %w[gem]
+     @cmd.options[:system]        = true
+     @cmd.options[:generate_rdoc] = false

@@ -1,4 +1,5 @@
 01_default_gem_path.diff
 03_disable_update_system.diff
 08_tighter_search_regex.diff
-50_add_missing_require_yaml.diff
+disable-failing-tests.diff
+disable-tests-failing-as-root.diff

@@ -28,6 +28,7 @@ end
 require 'rubygems/defaults'
 require "rubygems/dependency_list"
 require 'rbconfig'
+require "rubygems/deprecate"
 
 ##
 # RubyGems is the Ruby standard for publishing and managing third party
@@ -118,7 +119,8 @@ require 'rbconfig'
 # -The RubyGems Team
 
 module Gem
-  VERSION = '1.6.2'
+
+  VERSION = '1.7.2'
 
   ##
   # Raised when RubyGems is unable to load or activate a gem.  Contains the
@@ -182,7 +184,6 @@ module Gem
 
   @configuration = nil
   @loaded_specs = {}
-  @loaded_stacks = {}
   @platforms = []
   @ruby = nil
   @sources = []
@@ -232,34 +233,27 @@ module Gem
   # Gem::Requirement and Gem::Version documentation.
 
   def self.activate(dep, *requirements)
-    # TODO: remove options entirely
-    if requirements.last.is_a?(Hash)
-      options = requirements.pop
-    else
-      options = {}
-    end
+    activate_dep dep, *requirements
+  end
 
+  def self.activate_dep dep, *requirements
     requirements = Gem::Requirement.default if requirements.empty?
     dep = Gem::Dependency.new(dep, requirements) unless Gem::Dependency === dep
 
-    # TODO: remove sources entirely
-    sources = options[:sources] || []
     matches = Gem.source_index.search dep, true
     report_activate_error(dep) if matches.empty?
 
-    if @loaded_specs[dep.name] then
+    existing_spec = @loaded_specs[dep.name]
+
+    # TODO: move this to Dependency
+    if existing_spec then
       # This gem is already loaded.  If the currently loaded gem is not in the
       # list of candidate gems, then we have a version conflict.
-      existing_spec = @loaded_specs[dep.name]
 
       # TODO: unless dep.matches_spec? existing_spec then
       unless matches.any? { |spec| spec.version == existing_spec.version } then
-        sources_message = sources.map { |spec| spec.full_name }
-        stack_message = @loaded_stacks[dep.name].map { |spec| spec.full_name }
-
-        msg = "can't activate #{dep} for #{sources_message.inspect}, "
-        msg << "already activated #{existing_spec.full_name} for "
-        msg << "#{stack_message.inspect}"
+        msg = "can't activate #{dep}, "
+        msg << "already activated #{existing_spec.full_name}"
 
         e = Gem::LoadError.new msg
         e.name = dep.name
@@ -271,9 +265,36 @@ module Gem
       return false
     end
 
+    # TODO: this + spec.conflicts hint that activation is still dumb
     spec = matches.last
 
+    activate_spec spec
+  end
+
+  def self.activate_spec spec
+    existing_spec = @loaded_specs[spec.name]
+
+    # TODO: move this to Specification
+    if existing_spec then
+      if spec.version != existing_spec.version then
+        # This gem is already loaded.  If the currently loaded gem is not in the
+        # list of candidate gems, then we have a version conflict.
+
+        msg = "can't activate #{dep}, "
+        msg << "already activated #{existing_spec.full_name}"
+
+        e = Gem::LoadError.new msg
+        e.name = dep.name
+        e.requirement = dep.requirement
+
+        raise e
+      end
+
+      return false
+    end
+
     conf = spec.conflicts
+
     unless conf.empty? then
       why = conf.map { |act,con|
         "#{act.full_name} conflicts with #{con.join(", ")}"
@@ -284,11 +305,8 @@ module Gem
       raise LoadError, "Unable to activate #{spec.full_name}, because #{why}"
     end
 
-    return false if spec.loaded?
-
     spec.loaded = true
     @loaded_specs[spec.name]  = spec
-    @loaded_stacks[spec.name] = sources.dup
 
     spec.runtime_dependencies.each do |spec_dep|
       next if Gem.loaded_specs.include? spec_dep.name
@@ -372,6 +390,8 @@ module Gem
   # you to specify specific gem versions.
 
   def self.bin_path(name, exec_name = nil, *requirements)
+    raise ArgumentError, "you must supply exec_name" unless exec_name
+
     requirements = Gem::Requirement.default if
       requirements.empty?
     specs = Gem.source_index.find_name(name, requirements)
@@ -587,6 +607,7 @@ module Gem
   # Zlib::GzipReader wrapper that unzips +data+.
 
   def self.gunzip(data)
+    # TODO: move to utils
     require 'stringio'
     require 'zlib'
     data = StringIO.new data
@@ -598,6 +619,7 @@ module Gem
   # Zlib::GzipWriter wrapper that zips +data+.
 
   def self.gzip(data)
+    # TODO: move to utils
     require 'stringio'
     require 'zlib'
     zipped = StringIO.new
@@ -611,6 +633,7 @@ module Gem
   # A Zlib::Inflate#inflate wrapper
 
   def self.inflate(data)
+    # TODO: move to utils
     require 'zlib'
     Zlib::Inflate.inflate data
   end
@@ -620,12 +643,14 @@ module Gem
   # <tt>https://rubygems.org</tt>.
 
   def self.host
+    # TODO: move to utils
     @host ||= "https://rubygems.org"
   end
 
   ## Set the default RubyGems API host.
 
   def self.host= host
+    # TODO: move to utils
     @host = host
   end
 
@@ -706,6 +731,7 @@ module Gem
     file = $1
     lineno = $2.to_i
 
+    # TODO: it is ALWAYS joined! STUPID!
     [file, lineno]
   end
 
@@ -1022,7 +1048,7 @@ module Gem
   # Returns the Gem::SourceIndex of specifications that are in the Gem.path
 
   def self.source_index
-    @@source_index ||= SourceIndex.from_installed_gems
+    @@source_index ||= SourceIndex.new Gem::SourceIndex.installed_spec_directories
   end
 
   ##
@@ -1214,11 +1240,6 @@ module Gem
   end
 
   def self.cache # :nodoc:
-    warn "#{Gem.location_of_caller.join ':'}:Warning: " \
-      "Gem::cache is deprecated and will be removed on or after " \
-      "August 2011.  " \
-      "Use Gem::source_index."
-
     source_index
   end
 
@@ -1238,6 +1259,16 @@ module Gem
   autoload :Platform, 'rubygems/platform'
   autoload :Builder, 'rubygems/builder'
   autoload :ConfigFile, 'rubygems/config_file'
+
+  class << self
+    extend Deprecate
+    # Can't do this one until I add Specification#activate
+    # deprecate :activate,          "Specification#activate", 2011, 10
+    deprecate :all_load_paths,    :none,                    2011, 10
+    deprecate :latest_load_paths, :none,                    2011, 10
+    deprecate :promote_load_path, :none,                    2011, 10
+    deprecate :cache,             "Gem::source_index",      2011, 8
+  end
 end
 
 module Kernel
