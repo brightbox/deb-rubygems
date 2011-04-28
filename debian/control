@@ -14,7 +14,7 @@ XS-Ruby-Versions: ruby1.8
 Package: rubygems
 Architecture: all
 XB-Ruby-Versions: ${ruby:Versions}
-Depends: ${shlibs:Depends}, ${misc:Depends}, ruby1.8 | ruby-interpreter
+Depends: ${shlibs:Depends}, ${misc:Depends}, ruby1.8
 Recommends: ruby1.8-dev, build-essential
 Replaces: rubygems1.8 (<< 1.7.2-1~), rubygems-doc (<< 1.7.2-1~)
 Conflicts: rubygems1.8 (<< 1.7.2-1~), rubygems-doc (<< 1.7.2-1~)
