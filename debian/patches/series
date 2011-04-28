@@ -3,3 +3,4 @@
 08_tighter_search_regex.diff
 disable-failing-tests.diff
 disable-tests-failing-as-root.diff
+fix-shebang.diff
