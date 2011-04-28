@@ -58,6 +58,9 @@ License: Ruby
       IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
       WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
       PURPOSE.
+ -- 
+ On Debian GNU/Linux systems, the complete text of the GNU General
+ Public License can be found in `/usr/share/common-licenses/GPL'.
 
 Files: debian/*
 Copyright: Copyright 2004-2011 Daigo Moriwaki <daigo@debian.org>
