@@ -146,7 +146,7 @@ gems:
       fetcher.fetch_size 'gems.example.com/yaml'
     end
 
-    assert_equal 'uri scheme is invalid', e.message
+    assert_equal 'uri scheme is invalid: nil', e.message
   end
 
   def test_fetch_size_socket_error
@@ -416,7 +416,7 @@ gems:
   def test_fetch_path_gzip
     fetcher = Gem::RemoteFetcher.new nil
 
-    def fetcher.open_uri_or_path(uri, mtime, head = nil)
+    def fetcher.fetch_http(uri, mtime, head = nil)
       Gem.gzip 'foo'
     end
 
@@ -426,7 +426,7 @@ gems:
   def test_fetch_path_gzip_unmodified
     fetcher = Gem::RemoteFetcher.new nil
 
-    def fetcher.open_uri_or_path(uri, mtime, head = nil)
+    def fetcher.fetch_http(uri, mtime, head = nil)
       nil
     end
 
@@ -436,53 +436,59 @@ gems:
   def test_fetch_path_io_error
     fetcher = Gem::RemoteFetcher.new nil
 
-    def fetcher.open_uri_or_path(uri, mtime, head = nil)
+    def fetcher.fetch_http(*)
       raise EOFError
     end
 
+    url = 'http://example.com/uri'
+
     e = assert_raises Gem::RemoteFetcher::FetchError do
-      fetcher.fetch_path 'uri'
+      fetcher.fetch_path url
     end
 
-    assert_equal 'EOFError: EOFError (uri)', e.message
-    assert_equal 'uri', e.uri
+    assert_equal "EOFError: EOFError (#{url})", e.message
+    assert_equal url, e.uri
   end
 
   def test_fetch_path_socket_error
     fetcher = Gem::RemoteFetcher.new nil
 
-    def fetcher.open_uri_or_path(uri, mtime, head = nil)
+    def fetcher.fetch_http(uri, mtime, head = nil)
       raise SocketError
     end
 
+    url = 'http://example.com/uri'
+
     e = assert_raises Gem::RemoteFetcher::FetchError do
-      fetcher.fetch_path 'uri'
+      fetcher.fetch_path url
     end
 
-    assert_equal 'SocketError: SocketError (uri)', e.message
-    assert_equal 'uri', e.uri
+    assert_equal "SocketError: SocketError (#{url})", e.message
+    assert_equal url, e.uri
   end
 
   def test_fetch_path_system_call_error
     fetcher = Gem::RemoteFetcher.new nil
 
-    def fetcher.open_uri_or_path(uri, mtime = nil, head = nil)
+    def fetcher.fetch_http(uri, mtime = nil, head = nil)
       raise Errno::ECONNREFUSED, 'connect(2)'
     end
 
+    url = 'http://example.com/uri'
+
     e = assert_raises Gem::RemoteFetcher::FetchError do
-      fetcher.fetch_path 'uri'
+      fetcher.fetch_path url
     end
 
-    assert_match %r|ECONNREFUSED:.*connect\(2\) \(uri\)\z|,
+    assert_match %r|ECONNREFUSED:.*connect\(2\) \(#{Regexp.escape url}\)\z|,
                  e.message
-    assert_equal 'uri', e.uri
+    assert_equal url, e.uri
   end
 
   def test_fetch_path_unmodified
     fetcher = Gem::RemoteFetcher.new nil
 
-    def fetcher.open_uri_or_path(uri, mtime, head = nil)
+    def fetcher.fetch_http(uri, mtime, head = nil)
       nil
     end
 
@@ -545,16 +551,18 @@ gems:
     end
   end
 
-  def test_open_uri_or_path
+  def test_fetch_http
     fetcher = Gem::RemoteFetcher.new nil
+    url = 'http://gems.example.com/redirect'
 
     conn = Object.new
     def conn.started?() true end
     def conn.request(req)
+      url = 'http://gems.example.com/redirect'
       unless defined? @requested then
         @requested = true
         res = Net::HTTPMovedPermanently.new nil, 301, nil
-        res.add_field 'Location', 'http://gems.example.com/real_path'
+        res.add_field 'Location', url
         res
       else
         res = Net::HTTPOK.new nil, 200, nil
@@ -566,19 +574,21 @@ gems:
     conn = { "#{Thread.current.object_id}:gems.example.com:80" => conn }
     fetcher.instance_variable_set :@connections, conn
 
-    data = fetcher.open_uri_or_path 'http://gems.example.com/redirect'
+    data = fetcher.fetch_http URI.parse(url)
 
     assert_equal 'real_path', data
   end
 
-  def test_open_uri_or_path_limited_redirects
+  def test_fetch_http_redirects
     fetcher = Gem::RemoteFetcher.new nil
+    url = 'http://gems.example.com/redirect'
 
     conn = Object.new
     def conn.started?() true end
     def conn.request(req)
+      url = 'http://gems.example.com/redirect'
       res = Net::HTTPMovedPermanently.new nil, 301, nil
-      res.add_field 'Location', 'http://gems.example.com/redirect'
+      res.add_field 'Location', url
       res
     end
 
@@ -586,11 +596,10 @@ gems:
     fetcher.instance_variable_set :@connections, conn
 
     e = assert_raises Gem::RemoteFetcher::FetchError do
-      fetcher.open_uri_or_path 'http://gems.example.com/redirect'
+      fetcher.fetch_http URI.parse(url)
     end
 
-    assert_equal 'too many redirects (http://gems.example.com/redirect)',
-                 e.message
+    assert_equal "too many redirects (#{url})", e.message
   end
 
   def test_request
@@ -623,6 +632,85 @@ gems:
     assert_equal '', response.body
 
     assert_equal t.rfc2822, conn.payload['if-modified-since']
+  end
+
+  def test_user_agent
+    ua = @fetcher.user_agent
+
+    assert_match %r%^RubyGems/\S+ \S+ Ruby/\S+ \(.*?\)%,          ua
+    assert_match %r%RubyGems/#{Regexp.escape Gem::VERSION}%,      ua
+    assert_match %r% #{Regexp.escape Gem::Platform.local.to_s} %, ua
+    assert_match %r%Ruby/#{Regexp.escape RUBY_VERSION}%,          ua
+    assert_match %r%\(#{Regexp.escape RUBY_RELEASE_DATE} %,       ua
+  end
+
+  def test_user_agent_engine
+    util_save_version
+
+    Object.send :remove_const, :RUBY_ENGINE if defined?(RUBY_ENGINE)
+    Object.send :const_set,    :RUBY_ENGINE, 'vroom'
+
+    ua = @fetcher.user_agent
+
+    assert_match %r%\) vroom%, ua
+  ensure
+    util_restore_version
+  end
+
+  def test_user_agent_engine_ruby
+    util_save_version
+
+    Object.send :remove_const, :RUBY_ENGINE if defined?(RUBY_ENGINE)
+    Object.send :const_set,    :RUBY_ENGINE, 'ruby'
+
+    ua = @fetcher.user_agent
+
+    assert_match %r%\)%, ua
+  ensure
+    util_restore_version
+  end
+
+  def test_user_agent_patchlevel
+    util_save_version
+
+    Object.send :remove_const, :RUBY_PATCHLEVEL
+    Object.send :const_set,    :RUBY_PATCHLEVEL, 5
+
+    ua = @fetcher.user_agent
+
+    assert_match %r% patchlevel 5\)%, ua
+  ensure
+    util_restore_version
+  end
+
+  def test_user_agent_revision
+    util_save_version
+
+    Object.send :remove_const, :RUBY_PATCHLEVEL
+    Object.send :const_set,    :RUBY_PATCHLEVEL, -1
+    Object.send :remove_const, :RUBY_REVISION if defined?(RUBY_REVISION)
+    Object.send :const_set,    :RUBY_REVISION, 6
+
+    ua = @fetcher.user_agent
+
+    assert_match %r% revision 6\)%, ua
+    assert_match %r%Ruby/#{Regexp.escape RUBY_VERSION}dev%, ua
+  ensure
+    util_restore_version
+  end
+
+  def test_user_agent_revision_missing
+    util_save_version
+
+    Object.send :remove_const, :RUBY_PATCHLEVEL
+    Object.send :const_set,    :RUBY_PATCHLEVEL, -1
+    Object.send :remove_const, :RUBY_REVISION if defined?(RUBY_REVISION)
+
+    ua = @fetcher.user_agent
+
+    assert_match %r%\(#{Regexp.escape RUBY_RELEASE_DATE}\)%, ua
+  ensure
+    util_restore_version
   end
 
   def test_yaml_error_on_size
@@ -745,6 +833,25 @@ gems:
 
     path = "/home/skillet"
     assert_equal "/home/skillet", @fetcher.correct_for_windows_path(path)
+  end
+
+  def util_save_version
+    @orig_RUBY_ENGINE     = RUBY_ENGINE if defined? RUBY_ENGINE
+    @orig_RUBY_PATCHLEVEL = RUBY_PATCHLEVEL
+    @orig_RUBY_REVISION   = RUBY_REVISION if defined? RUBY_REVISION
+  end
+
+  def util_restore_version
+    Object.send :remove_const, :RUBY_ENGINE if defined?(RUBY_ENGINE)
+    Object.send :const_set,    :RUBY_ENGINE, @orig_RUBY_ENGINE if
+      defined?(@orig_RUBY_ENGINE)
+
+    Object.send :remove_const, :RUBY_PATCHLEVEL
+    Object.send :const_set,    :RUBY_PATCHLEVEL, @orig_RUBY_PATCHLEVEL
+
+    Object.send :remove_const, :RUBY_REVISION if defined?(RUBY_REVISION)
+    Object.send :const_set,    :RUBY_REVISION, @orig_RUBY_REVISION if
+      defined?(@orig_RUBY_REVISION)
   end
 
 end
