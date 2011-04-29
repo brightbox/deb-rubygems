@@ -13,7 +13,7 @@ export DH_RUBY_IGNORE_TESTS=require-rubygems
 #export DH_RUBY_GEMSPEC=gem.gemspec
 
 %:
-	dh $@ --buildsystem=ruby --with ruby
+	dh $@ --buildsystem=ruby --with ruby,quilt
 
 override_dh_auto_install:
 	dh_auto_install
