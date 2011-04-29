@@ -1,5 +1,6 @@
 rubygems (1.7.2-1) unstable; urgency=low
 
+  [ Lucas Nussbaum ]
   * New upstream release.
   * Switch to gem2deb-based packaging. Rename source and binary packages.
   * Drop 50_add_missing_require_yaml.diff: fixed upstream.
@@ -14,7 +15,10 @@ rubygems (1.7.2-1) unstable; urgency=low
   * Add disable-failing-tests.diff: disable tests that are failing due to
     Debian-specific changes to rubygems.
 
- -- Lucas Nussbaum <lucas@lucas-nussbaum.net>  Thu, 28 Apr 2011 16:21:57 +0200
+  [ Daigo Moriwaki ]
+  * Switched the build framework from cdbs to dh. (thanks to Lucas)
+
+ -- Daigo Moriwaki <daigo@debian.org>  Fri, 29 Apr 2011 19:07:08 +0900
 
 libgems-ruby (1.6.2-1) unstable; urgency=low
 
