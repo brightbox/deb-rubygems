@@ -45,7 +45,7 @@ class TestGemInstallUpdateOptions < Gem::InstallerTestCase
                                  @spec.full_name))
   end
 
-  def test_user_install_disabled_read_only
+  def est_user_install_disabled_read_only
     if win_platform?
       skip('test_user_install_disabled_read_only test skipped on MS Windows')
     else

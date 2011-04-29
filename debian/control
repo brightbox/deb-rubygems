@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Daigo Moriwaki <daigo@debian.org>
 Uploaders: Debian Ruby Extras Maintainers <pkg-ruby-extras-maintainers@lists.alioth.debian.org>, Lucas Nussbaum <lucas@lucas-nussbaum.net>
 DM-Upload-Allowed: yes
-Build-Depends: debhelper (>= 7.0.50~), quilt (>= 0.46-7~), gem2deb (>= 0.2.2), rake
+Build-Depends: debhelper (>= 7.0.50~), quilt (>= 0.46-7~), gem2deb (>= 0.2.2), rake, ruby-minitest
 Standards-Version: 3.9.1
 Vcs-Git: git://git.debian.org/pkg-ruby-extras/rubygems.git
 Vcs-Browser: http://git.debian.org/?p=pkg-ruby-extras/rubygems.git;a=summary

@@ -289,7 +289,7 @@ class Gem::SourceIndex
                     end
     else
       requirement = platform_only || Gem::Requirement.default
-      gem_pattern = /#{gem_pattern}/i
+      gem_pattern = /^#{gem_pattern}/i
     end
 
     unless Gem::Requirement === requirement then

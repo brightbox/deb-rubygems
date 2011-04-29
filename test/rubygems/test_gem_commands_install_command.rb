@@ -109,7 +109,7 @@ class TestGemCommandsInstallCommand < Gem::TestCase
     assert out.empty?, out.inspect
   end
 
-  def test_no_user_install
+  def est_no_user_install
     skip 'skipped on MS Windows (chmod has no effect)' if win_platform?
 
     util_setup_fake_fetcher
