@@ -15,7 +15,7 @@ export DH_RUBY_IGNORE_TESTS=require-rubygems
 RDOC = /usr/bin/rdoc1.8
 
 %:
-	dh $@ --buildsystem=ruby --with ruby,quilt
+	dh $@ --buildsystem=ruby --with ruby
 
 build: build-arch build-indep ;
 
