@@ -12,8 +12,16 @@ export DH_RUBY_IGNORE_TESTS=require-rubygems
 # If you need to specify the .gemspec (eg there is more than one)
 #export DH_RUBY_GEMSPEC=gem.gemspec
 
+RDOC = /usr/bin/rdoc1.8
+
 %:
 	dh $@ --buildsystem=ruby --with ruby,quilt
+
+build: build-arch build-indep ;
+
+build-indep:
+	find lib -name "*.rb" | xargs $(RDOC) --fmt html --title RubyGems \
+	  --line-numbers --inline-source --main README.rdoc -o html README.rdoc
 
 override_dh_auto_install:
 	dh_auto_install
@@ -23,3 +31,14 @@ override_dh_auto_install:
 	mkdir debian/rubygems/usr/lib/ruby/tmp
 	mv debian/rubygems/usr/lib/ruby/vendor_ruby/* debian/rubygems/usr/lib/ruby/tmp/
 	mv debian/rubygems/usr/lib/ruby/tmp debian/rubygems/usr/lib/ruby/vendor_ruby/1.8
+
+override_dh_installchangelogs:
+	dh_installchangelogs History.txt
+
+override_dh_installdocs:
+	dh_installdocs html
+
+override_dh_auto_clean:
+	dh_auto_clean
+	[ ! -d html ] || rm -rf html
+
