@@ -10,7 +10,7 @@ class TestGemDocManager < Gem::TestCase
     @manager = Gem::DocManager.new(@spec)
   end
 
-  def est_uninstall_doc_unwritable
+  def test_uninstall_doc_unwritable
     path = @spec.installation_path
     orig_mode = File.stat(path).mode
 

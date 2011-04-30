@@ -461,7 +461,7 @@ class TestGem < Gem::TestCase
     assert_equal File.join(@gemhome, 'bin'), Gem.bindir(Pathname.new(Gem.dir))
   end
 
-  def est_self_bindir_default_dir
+  def test_self_bindir_default_dir
     default = Gem.default_dir
     bindir = if defined?(RUBY_FRAMEWORK_VERSION) then
                '/usr/bin'
@@ -520,7 +520,7 @@ class TestGem < Gem::TestCase
     assert_nil Gem.datadir('xyzzy')
   end
 
-  def est_self_default_dir
+  def test_self_default_dir
     assert_match @default_dir_re, Gem.default_dir
   end
 
@@ -581,7 +581,7 @@ class TestGem < Gem::TestCase
   end
 
   unless win_platform? then # only for FS that support write protection
-    def est_self_ensure_gem_directories_write_protected
+    def test_self_ensure_gem_directories_write_protected
       gemdir = File.join @tempdir, "egd"
       FileUtils.rm_r gemdir rescue nil
       refute File.exist?(gemdir), "manually remove #{gemdir}, tests are broken"
@@ -596,7 +596,7 @@ class TestGem < Gem::TestCase
       FileUtils.chmod 0600, gemdir
     end
 
-    def est_self_ensure_gem_directories_write_protected_parents
+    def test_self_ensure_gem_directories_write_protected_parents
       parent = File.join(@tempdir, "egd")
       gemdir = "#{parent}/a/b/c"
 

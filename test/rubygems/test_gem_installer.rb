@@ -264,7 +264,7 @@ load Gem.bin_path('a', 'executable', version)
     refute File.exist?(util_inst_bindir), 'bin dir was created when not needed'
   end
 
-  def est_generate_bin_script_no_perms
+  def test_generate_bin_script_no_perms
     @installer.wrappers = true
     util_make_exec
 
@@ -355,7 +355,7 @@ load Gem.bin_path('a', 'executable', version)
     refute File.exist?(util_inst_bindir)
   end
 
-  def est_generate_bin_symlink_no_perms
+  def test_generate_bin_symlink_no_perms
     @installer.wrappers = false
     util_make_exec
     @installer.gem_dir = util_gem_dir

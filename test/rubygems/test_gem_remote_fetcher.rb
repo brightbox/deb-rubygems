@@ -269,7 +269,7 @@ gems:
   end
 
   unless win_platform? # File.chmod doesn't work
-    def est_download_local_read_only
+    def test_download_local_read_only
       FileUtils.mv @a1_gem, @tempdir
       local_path = File.join @tempdir, @a1.file_name
       inst = nil
@@ -285,7 +285,7 @@ gems:
       File.chmod 0755, Gem.cache_dir(@gemhome)
     end
 
-    def est_download_read_only
+    def test_download_read_only
       File.chmod 0555, Gem.cache_dir(@gemhome)
       File.chmod 0555, File.join(@gemhome)
 

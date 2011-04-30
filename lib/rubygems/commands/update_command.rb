@@ -128,12 +128,6 @@ class Gem::Commands::UpdateCommand < Gem::Command
   # Update RubyGems software to the latest version.
 
   def update_rubygems
-    if ENV.include?('REALLY_GEM_UPDATE_SYSTEM')
-      say "Updating RubyGems"
-    else
-      alert_error "gem update --system is disabled on Debian, because it will overwrite the content of the rubygems Debian package, and might break your Debian system in subtle ways. The Debian-supported way to update rubygems is through apt-get, using Debian official repositories.\nIf you really know what you are doing, you can still update rubygems by setting the REALLY_GEM_UPDATE_SYSTEM environment variable, but please remember that this is completely unsupported by Debian."
-      terminate_interaction 1
-    end
     unless options[:args].empty? then
       alert_error "Gem names are not allowed with the --system option"
       terminate_interaction 1

@@ -82,7 +82,7 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
     end
   end
 
-  def est_execute_system
+  def test_execute_system
     util_setup_rubygem9
     util_setup_spec_fetcher @rubygem9
     util_add_to_fetcher @rubygem9
@@ -106,7 +106,7 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
     assert_empty out
   end
 
-  def est_execute_system_at_latest
+  def test_execute_system_at_latest
     util_setup_rubygem_current
     util_setup_spec_fetcher @rubygem_current
     util_add_to_fetcher @rubygem_current
@@ -128,7 +128,7 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
     assert_empty out
   end
 
-  def est_execute_system_multiple
+  def test_execute_system_multiple
     util_setup_rubygem9
     util_setup_rubygem8
     util_setup_spec_fetcher @rubygem8, @rubygem9
@@ -153,7 +153,7 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
     assert_empty out
   end
 
-  def est_execute_system_specific
+  def test_execute_system_specific
     util_clear_gems
     util_setup_rubygem9
     util_setup_rubygem8
@@ -178,7 +178,7 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
     assert_empty out
   end
 
-  def est_execute_system_specifically_to_latest_version
+  def test_execute_system_specifically_to_latest_version
     util_clear_gems
     util_setup_rubygem9
     util_setup_rubygem8
@@ -203,7 +203,7 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
     assert_empty out
   end
 
-  def est_execute_system_with_gems
+  def test_execute_system_with_gems
     @cmd.options[:args]          = %w[gem]
     @cmd.options[:system]        = true
     @cmd.options[:generate_rdoc] = false

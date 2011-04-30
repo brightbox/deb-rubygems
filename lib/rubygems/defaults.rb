@@ -15,15 +15,18 @@ module Gem
   ##
   # Default home directory path to be used if an alternate value is not
   # specified in the environment
-  #
-  # Debian patch: search order of this directory.
-  #   1. GEM_HOME enviroment variable
-  #      (Using this, Gems are to be installed in any path as you like)
-  #   2. /var/lib/gems/{ruby version} (This is the default path in Debian system)
-  #
 
   def self.default_dir
-    File.join('/', 'var', 'lib', 'gems', ConfigMap[:ruby_version])
+    if defined? RUBY_FRAMEWORK_VERSION then
+      File.join File.dirname(ConfigMap[:sitedir]), 'Gems',
+                ConfigMap[:ruby_version]
+    elsif ConfigMap[:rubylibprefix] then
+      File.join(ConfigMap[:rubylibprefix], 'gems',
+                ConfigMap[:ruby_version])
+    else
+      File.join(ConfigMap[:libdir], ruby_engine, 'gems',
+                ConfigMap[:ruby_version])
+    end
   end
 
   ##
@@ -60,11 +63,13 @@ module Gem
 
   ##
   # The default directory for binaries
-  # Debian patch:
-  #   install binaries to /usr/local/bin instead of /usr/bin
 
   def self.default_bindir
-    File.join('/', 'usr', 'local', 'bin')
+    if defined? RUBY_FRAMEWORK_VERSION then # mac framework support
+      '/usr/bin'
+    else # generic install
+      ConfigMap[:bindir]
+    end
   end
 
   ##
