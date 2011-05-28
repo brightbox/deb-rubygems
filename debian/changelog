@@ -1,3 +1,9 @@
+rubygems (1.7.2-1bbox2) lucid; urgency=low
+
+  * Ignore some test failures, needed for Ubuntu Lucid build
+
+ -- John Leach <john@brightbox.co.uk>  Sun, 29 May 2011 00:17:20 +0100
+
 rubygems (1.7.2-1bbox1) lucid; urgency=low
 
   * Backported to Ubuntu Lucid
