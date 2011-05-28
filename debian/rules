@@ -17,7 +17,7 @@ RDOC = /usr/bin/rdoc1.8
 %:
 	dh $@ --buildsystem=ruby --with ruby
 
-build: build-arch build-indep ;
+build: binary-arch build-indep ;
 
 build-indep:
 	find lib -name "*.rb" | xargs $(RDOC) --fmt html --title RubyGems \
