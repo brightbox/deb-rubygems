@@ -50,16 +50,16 @@ module Deprecate
     class_eval {
       old = "_deprecated_#{name}"
       alias_method old, name
-      define_method name do |*args|
+      define_method name do |*args, &block| # TODO: really works on 1.8.7?
         klass = self.kind_of? Module
         target = klass ? "#{self}." : "#{self.class}#"
         msg = [ "NOTE: #{target}#{name} is deprecated",
                 repl == :none ? " with no replacement" : ", use #{repl}",
                 ". It will be removed on or after %4d-%02d-01." % [year, month],
-                "\n#{target}#{name} called from #{Gem.location_of_caller.join(":")}\n",
+                "\n#{target}#{name} called from #{Gem.location_of_caller.join(":")}",
               ]
         warn "#{msg.join}." unless Deprecate.skip
-        send old, *args
+        send old, *args, &block
       end
     }
   end

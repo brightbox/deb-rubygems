@@ -18,6 +18,7 @@ Hoe::RUBY_FLAGS << " --disable-gems" if RUBY_VERSION > "1.9"
 
 Hoe.plugin :minitest
 Hoe.plugin :git
+Hoe.plugin :isolate
 
 hoe = Hoe.spec 'rubygems-update' do
   self.rubyforge_name = 'rubygems'
@@ -45,6 +46,9 @@ hoe = Hoe.spec 'rubygems-update' do
   extra_dev_deps << ['builder', '~> 2.1']
   extra_dev_deps << ['hoe-seattlerb', '~> 1.2']
   extra_dev_deps << ['session', '~> 2.4']
+  extra_dev_deps << ['rdoc', '~> 3.0']
+  extra_dev_deps << ['rcov', '~> 0.9.0']
+  extra_dev_deps << ['ZenTest', '~> 4.5']
 
   self.extra_rdoc_files = Dir["*.rdoc"]
 
@@ -73,16 +77,10 @@ task :rake_sucks do
   end
 end
 
-desc "Run just the functional tests"
-Rake::TestTask.new(:test_functional) do |t|
-  t.test_files = FileList['test/functional*.rb']
-  t.warning = true
-end
-
 # --------------------------------------------------------------------
 # Creating a release
 
-task :prerelease => [:clobber, :check_manifest, :test, :test_functional]
+task :prerelease => [:clobber, :check_manifest, :test]
 
 task :postrelease => :publish_docs
 
@@ -93,6 +91,13 @@ task :package do
     sh "tar -czf rubygems-#{hoe.version}.tgz rubygems-#{hoe.version}"
     sh "zip -q -r rubygems-#{hoe.version}.zip rubygems-#{hoe.version}"
   end
+end
+
+task :upload_to_rubyforge do
+  v = hoe.version
+  sh "rubyforge add_release rubygems rubygems #{v} pkg/rubygems-update-#{v}.gem"
+  sh "rubyforge add_file rubygems rubygems #{v} pkg/rubygems-#{v}.zip"
+  sh "rubyforge add_file rubygems rubygems #{v} pkg/rubygems-#{v}.tgz"
 end
 
 # Misc Tasks ---------------------------------------------------------
@@ -111,8 +116,7 @@ def rsync_with dir
     " --exclude '*.rej' --exclude '*.orig' --exclude 'lib/rubygems/defaults/*'"
   sh "rsync #{rsync_options} bin/gem             #{dir}/bin/gem"
   sh "rsync #{rsync_options} lib/                #{dir}/lib"
-  sh "rsync #{rsync_options} test/               #{dir}/test/rubygems"
-  sh "rsync #{rsync_options} util/gem_prelude.rb #{dir}/gem_prelude.rb"
+  sh "rsync #{rsync_options} test/               #{dir}/test"
 end
 
 def diff_with dir
@@ -123,11 +127,10 @@ def diff_with dir
   sh "diff #{diff_options} lib/rubygems        #{dir}/lib/rubygems;    true"
   sh "diff #{diff_options} lib/rbconfig        #{dir}/lib/rbconfig;    true"
   sh "diff #{diff_options} test                #{dir}/test/rubygems;   true"
-  sh "diff #{diff_options} util/gem_prelude.rb #{dir}/gem_prelude.rb;  true"
 end
 
-rubinius_dir = ENV['RUBINIUS_PATH'] || '../../../git/git.rubini.us/code'
-ruby_dir     = ENV['RUBY_PATH']     || '../../ruby/trunk'
+rubinius_dir = ENV['RUBINIUS_PATH'] || '../git.rubini.us/code'
+ruby_dir     = ENV['RUBY_PATH']     || '../../svn/ruby/trunk'
 
 desc "Updates Ruby HEAD with the currently checked-out copy of RubyGems."
 task :update_ruby do
@@ -167,6 +170,7 @@ task "rcov:for", [:test] do |task, args|
 
   rflags  = []
   rflags << "-i" << "lib/rubygems"
+  rflags << "--no-color" << "--save coverage.info" << "-T" << "--no-html"
 
   ruby "#{flags.join ' '} #{rcov} #{rflags.join ' '} #{args[:test]}"
 end
