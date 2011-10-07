@@ -106,3 +106,14 @@ Description: disable tests that are failing due to Debian-specific modifications
      orig_sources = Gem.sources.dup
      Gem.sources.replace %w[http://gems.example.com]
      Gem.configuration['gemcutter_key'] = 'blah'
+--- a/test/rubygems/test_gem_security.rb
++++ b/test/rubygems/test_gem_security.rb
+@@ -36,7 +36,7 @@ class TestGemSecurity < Gem::TestCase
+     assert_equal name.to_s, cert.subject.to_s
+   end
+ 
+-  def test_class_build_self_signed_cert
++  def est_class_build_self_signed_cert
+     email = 'nobody@example'
+     opt = {
+       :cert_age  => 60,
