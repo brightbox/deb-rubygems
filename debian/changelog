@@ -1,11 +1,17 @@
 rubygems (1.8.10-1) unstable; urgency=low
 
-  * Non-maintainer upload.
   * debian/watch: point to rubygems.org
   * debian/copyright: change to a working url in Format: field
   * Add build-dependency on ruby-minitest.
+  * switch to my @d.o email.
+  * Refresh patches:
+    + 08_tighter_search_regex.diff: drop.
+    + 01_default_gem_path.diff: refresh.
+    + disable-failing-tests.diff: refresh.
+    + disable-tests-failing-as-root.diff: refresh.
+  * Bump standards-version to 3.9.2. No changes needed.
 
- -- Lucas Nussbaum <lucas@debian.org>  Fri, 07 Oct 2011 13:47:24 +0200
+ -- Lucas Nussbaum <lucas@debian.org>  Fri, 07 Oct 2011 14:09:03 +0200
 
 rubygems (1.7.2-1) unstable; urgency=low
 
