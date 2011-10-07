@@ -4,11 +4,6 @@ EXC_TESTS = [
   'test/rubygems/insure_session.rb',
 ]
 
-begin
-  require 'rubygems'
-  require 'minitest/autorun'
-rescue LoadError
-  $stderr.puts "WARNING: Skipped tests due to lack of dependency libraries."
-  exit
-end
+require 'rubygems'
+require 'minitest/autorun'
 (Dir['{spec,test}/**/test_*.rb'] - EXC_TESTS).each { |f| require f }
