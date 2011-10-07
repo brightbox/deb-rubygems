@@ -52,22 +52,22 @@ class Gem::Commands::ContentsCommand < Gem::Command
     end.flatten
 
     path_kind = if spec_dirs.empty? then
-                  spec_dirs = Gem::SourceIndex.installed_spec_directories
+                  spec_dirs = Gem::Specification.dirs
                   "default gem paths"
                 else
                   "specified path"
                 end
 
-    si = Gem::SourceIndex.new spec_dirs
-
     gem_names = if options[:all] then
-                  si.map { |_, spec| spec.name }
+                  Gem::Specification.map(&:name)
                 else
                   get_all_gem_names
                 end
 
     gem_names.each do |name|
-      spec = si.find_name(name, version).last
+      # HACK: find_by_name fails for some reason... ARGH
+      # How many places must we embed our resolve logic?
+      spec = Gem::Specification.find_all_by_name(name, version).last
 
       unless spec then
         say "Unable to find gem '#{name}' in #{path_kind}"

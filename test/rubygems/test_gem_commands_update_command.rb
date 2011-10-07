@@ -18,15 +18,15 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
     @cmd.options[:generate_ri]   = false
 
     util_setup_fake_fetcher
-
-    @a1_path = Gem.cache_gem(@a1.file_name, @gemhome)
-    @a2_path = Gem.cache_gem(@a2.file_name, @gemhome)
-
+    util_clear_gems
     util_setup_spec_fetcher @a1, @a2
 
-    @fetcher.data["#{@gem_repo}gems/#{@a1.file_name}"] =
+    @a1_path = @a1.cache_file
+    @a2_path = @a2.cache_file
+
+    @fetcher.data["#{@gem_repo}gems/#{File.basename @a1_path}"] =
       read_binary @a1_path
-    @fetcher.data["#{@gem_repo}gems/#{@a2.file_name}"] =
+    @fetcher.data["#{@gem_repo}gems/#{File.basename @a2_path}"] =
       read_binary @a2_path
   end
 
@@ -75,18 +75,19 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
 
   def util_add_to_fetcher *specs
     specs.each do |spec|
-      gem_file = Gem.cache_gem(spec.file_name, @gemhome)
+      gem_file = spec.cache_file
+      file_name = File.basename gem_file
 
-      @fetcher.data["http://gems.example.com/gems/#{spec.file_name}"] =
+      @fetcher.data["http://gems.example.com/gems/#{file_name}"] =
         Gem.read_binary gem_file
     end
   end
 
   def test_execute_system
+    util_clear_gems
     util_setup_rubygem9
     util_setup_spec_fetcher @rubygem9
     util_add_to_fetcher @rubygem9
-    util_clear_gems
 
     @cmd.options[:args]          = []
     @cmd.options[:system]        = true
@@ -107,10 +108,10 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
   end
 
   def test_execute_system_at_latest
+    util_clear_gems
     util_setup_rubygem_current
     util_setup_spec_fetcher @rubygem_current
     util_add_to_fetcher @rubygem_current
-    util_clear_gems
 
     @cmd.options[:args]          = []
     @cmd.options[:system]        = true
@@ -129,11 +130,11 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
   end
 
   def test_execute_system_multiple
+    util_clear_gems
     util_setup_rubygem9
     util_setup_rubygem8
     util_setup_spec_fetcher @rubygem8, @rubygem9
     util_add_to_fetcher @rubygem8, @rubygem9
-    util_clear_gems
 
     @cmd.options[:args]          = []
     @cmd.options[:system]        = true
@@ -237,16 +238,11 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
     @a2.add_dependency 'c', '2'
     @a2.add_dependency 'b', '2'
 
-    @b2_path   = Gem.cache_gem(@b2.file_name, @gemhome)
-    @c1_2_path = Gem.cache_gem(@c1_2.file_name, @gemhome)
-    @c2_path   = Gem.cache_gem(@c2.file_name, @gemhome)
+    @b2_path   = @b2.cache_file
+    @c1_2_path = @c1_2.cache_file
+    @c2_path   = @c2.cache_file
 
-    @source_index = Gem::SourceIndex.new
-    @source_index.add_spec @a1
-    @source_index.add_spec @a2
-    @source_index.add_spec @b2
-    @source_index.add_spec @c1_2
-    @source_index.add_spec @c2
+    install_specs @a1, @a2, @b2, @c1_2, @c2
 
     util_build_gem @a1
     util_build_gem @a2
@@ -255,15 +251,15 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
     @fetcher.data["#{@gem_repo}gems/#{@a1.file_name}"] = read_binary @a1_path
     @fetcher.data["#{@gem_repo}gems/#{@a2.file_name}"] = read_binary @a2_path
     @fetcher.data["#{@gem_repo}gems/#{@b2.file_name}"] = read_binary @b2_path
-    @fetcher.data["#{@gem_repo}gems/#{@c1_2.file_name}"] =
-      read_binary @c1_2_path
+    @fetcher.data["#{@gem_repo}gems/#{@c1_2.file_name}"] = read_binary @c1_2_path
     @fetcher.data["#{@gem_repo}gems/#{@c2.file_name}"] = read_binary @c2_path
 
     util_setup_spec_fetcher @a1, @a2, @b2, @c1_2, @c2
-    util_clear_gems
 
     Gem::Installer.new(@c1_2_path).install
     Gem::Installer.new(@a1_path).install
+
+    Gem::Specification.reset
 
     @cmd.options[:args] = []
 

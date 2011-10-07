@@ -73,16 +73,13 @@ class Gem::SourceIndex
 
   def self.load_specification(file_name)
     Deprecate.skip_during do
-      Gem::Specification.load file_name
+      Gem::Specification.load Gem::Path.new(file_name)
     end
   end
 
   ##
   # Constructs a source index instance from the provided specifications, which
   # is a Hash of gem full names and Gem::Specifications.
-  #--
-  # TODO merge @gems and @prerelease_gems and provide a separate method
-  # #prerelease_gems
 
   def initialize specs_or_dirs = []
     @gems = {}
@@ -90,8 +87,9 @@ class Gem::SourceIndex
 
     case specs_or_dirs
     when Hash then
-      warn "NOTE: SourceIndex.new(hash) is deprecated; From #{caller.first}."
-      specs_or_dirs.each{ |full_name, spec| add_spec spec }
+      specs_or_dirs.each do |full_name, spec|
+        add_spec spec
+      end
     when Array, String then
       self.spec_dirs = Array(specs_or_dirs)
       refresh!
@@ -102,15 +100,15 @@ class Gem::SourceIndex
   end
 
   def all_gems
-    @gems
+    gems
   end
 
   def prerelease_gems
-    @gems.reject{ |name, gem| !gem.version.prerelease? }
+    @gems.reject { |name, gem| !gem.version.prerelease? }
   end
 
   def released_gems
-    @gems.reject{ |name, gem| gem.version.prerelease? }
+    @gems.reject { |name, gem| gem.version.prerelease? }
   end
 
   ##
@@ -120,7 +118,7 @@ class Gem::SourceIndex
     @gems.clear
 
     spec_dirs.reverse_each do |spec_dir|
-      spec_files = Dir.glob File.join(spec_dir, '*.gemspec')
+      spec_files = Dir[File.join(spec_dir, "*.gemspec")]
 
       spec_files.each do |spec_file|
         gemspec = Deprecate.skip_during do
@@ -165,8 +163,6 @@ class Gem::SourceIndex
       result[name] << spec
     end
 
-    # TODO: why is this a hash while @gems is an array? Seems like
-    # structural similarity would be good.
     result.values.flatten
   end
 
@@ -197,8 +193,10 @@ class Gem::SourceIndex
   # Add gem specifications to the source index.
 
   def add_specs(*gem_specs)
-    gem_specs.each do |spec|
-      add_spec spec
+    Deprecate.skip_during do
+      gem_specs.each do |spec|
+        add_spec spec
+      end
     end
   end
 
@@ -252,7 +250,10 @@ class Gem::SourceIndex
 
   def find_name(gem_name, requirement = Gem::Requirement.default)
     dep = Gem::Dependency.new gem_name, requirement
-    search dep
+
+    Deprecate.skip_during do
+      search dep
+    end
   end
 
   ##
@@ -264,9 +265,9 @@ class Gem::SourceIndex
   # +gem_pattern+, and a Gem::Requirement for +platform_only+.  This
   # behavior is deprecated and will be removed.
 
-  def search(gem_pattern, platform_only = false)
+  def search(gem_pattern, platform_or_requirement = false)
     requirement = nil
-    only_platform = false
+    only_platform = false # FIX: WTF is this?!?
 
     # TODO - Remove support and warning for legacy arguments after 2008/11
     unless Gem::Dependency === gem_pattern
@@ -275,9 +276,9 @@ class Gem::SourceIndex
 
     case gem_pattern
     when Regexp then
-      requirement = platform_only || Gem::Requirement.default
+      requirement = platform_or_requirement || Gem::Requirement.default
     when Gem::Dependency then
-      only_platform = platform_only
+      only_platform = platform_or_requirement
       requirement = gem_pattern.requirement
 
       gem_pattern = if Regexp === gem_pattern.name then
@@ -288,7 +289,7 @@ class Gem::SourceIndex
                       /^#{Regexp.escape gem_pattern.name}$/
                     end
     else
-      requirement = platform_only || Gem::Requirement.default
+      requirement = platform_or_requirement || Gem::Requirement.default
       gem_pattern = /#{gem_pattern}/i
     end
 
@@ -349,16 +350,6 @@ class Gem::SourceIndex
   def dump
     Marshal.dump(self)
   end
-
-  extend Deprecate
-  deprecate :all_gems, :none,  2011, 10
-
-  class << self
-    extend Deprecate
-    deprecate :from_installed_gems,        :none, 2011, 10
-    deprecate :from_gems_in,               :none, 2011, 10
-    deprecate :load_specification,         :none, 2011, 10
-  end
 end
 
 # :stopdoc:
@@ -371,5 +362,45 @@ module Gem
   Cache = SourceIndex
 
 end
-# :startdoc:
 
+class Gem::SourceIndex
+  extend Deprecate
+
+  deprecate :all_gems,         :none,                        2011, 10
+
+  deprecate :==,               :none,                        2011, 11 # noisy
+  deprecate :add_specs,        :none,                        2011, 11 # noisy
+  deprecate :each,             :none,                        2011, 11
+  deprecate :gems,             :none,                        2011, 11
+  deprecate :load_gems_in,     :none,                        2011, 11
+  deprecate :refresh!,         :none,                        2011, 11
+  deprecate :spec_dirs=,       "Specification.dirs=",        2011, 11 # noisy
+  deprecate :add_spec,         "Specification.add_spec",     2011, 11
+  deprecate :find_name,        "Specification.find_by_name", 2011, 11
+  deprecate :gem_signature,    :none,                        2011, 11
+  deprecate :index_signature,  :none,                        2011, 11
+  deprecate :initialize,       :none,                        2011, 11
+  deprecate :latest_specs,     "Specification.latest_specs", 2011, 11
+  deprecate :length,           "Specification.all.length",   2011, 11
+  deprecate :outdated,         :none,                        2011, 11
+  deprecate :prerelease_gems,  :none,                        2011, 11
+  deprecate :prerelease_specs, :none,                        2011, 11
+  deprecate :released_gems,    :none,                        2011, 11
+  deprecate :released_specs,   :none,                        2011, 11
+  deprecate :remove_spec,      "Specification.remove_spec",  2011, 11
+  deprecate :search,           :none,                        2011, 11
+  deprecate :size,             "Specification.all.size",     2011, 11
+  deprecate :spec_dirs,        "Specification.dirs",         2011, 11
+  deprecate :specification,    "Specification.find",         2011, 11
+
+  class << self
+    extend Deprecate
+
+    deprecate :from_gems_in,               :none,                2011, 10
+    deprecate :from_installed_gems,        :none,                2011, 10
+    deprecate :installed_spec_directories, "Specification.dirs", 2011, 11
+    deprecate :load_specification,         :none,                2011, 10
+  end
+end
+
+# :startdoc:

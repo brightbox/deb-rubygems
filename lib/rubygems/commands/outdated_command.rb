@@ -16,11 +16,8 @@ class Gem::Commands::OutdatedCommand < Gem::Command
   end
 
   def execute
-    # FIX: this should be able to be Gem.source_index but our test fails :(
-    locals = Gem::SourceIndex.new Gem::SourceIndex.installed_spec_directories
-
-    locals.outdated.sort.each do |name|
-      local   = locals.find_name(name).last
+    Gem::Specification.outdated.sort.each do |name|
+      local   = Gem::Specification.find_all_by_name(name).max
       dep     = Gem::Dependency.new local.name, ">= #{local.version}"
       remotes = Gem::SpecFetcher.fetcher.fetch dep
 
@@ -30,6 +27,4 @@ class Gem::Commands::OutdatedCommand < Gem::Command
       say "#{local.name} (#{local.version} < #{remote.version})"
     end
   end
-
 end
-

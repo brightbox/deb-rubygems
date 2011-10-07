@@ -1,8 +1,8 @@
 .autotest
 .document
-GPL.txt
 History.txt
 LICENSE.txt
+MIT.txt
 Manifest.txt
 README.rdoc
 Rakefile
@@ -84,6 +84,7 @@ lib/rubygems/package/tar_reader/entry.rb
 lib/rubygems/package/tar_test_case.rb
 lib/rubygems/package/tar_writer.rb
 lib/rubygems/package_task.rb
+lib/rubygems/path_support.rb
 lib/rubygems/platform.rb
 lib/rubygems/remote_fetcher.rb
 lib/rubygems/require_paths_builder.rb
@@ -102,8 +103,6 @@ lib/rubygems/validator.rb
 lib/rubygems/version.rb
 lib/rubygems/version_option.rb
 lib/ubygems.rb
-pkgs/sources/lib/sources.rb
-pkgs/sources/sources.gemspec
 setup.rb
 test/rubygems/bogussources.rb
 test/rubygems/data/gem-private_key.pem
@@ -111,7 +110,6 @@ test/rubygems/data/gem-public_cert.pem
 test/rubygems/fake_certlib/openssl.rb
 test/rubygems/fix_openssl_warnings.rb
 test/rubygems/foo/discover.rb
-test/rubygems/functional.rb
 test/rubygems/insure_session.rb
 test/rubygems/plugin/exception/rubygems_plugin.rb
 test/rubygems/plugin/load/rubygems_plugin.rb
@@ -130,11 +128,13 @@ test/rubygems/test_gem_command_manager.rb
 test/rubygems/test_gem_commands_build_command.rb
 test/rubygems/test_gem_commands_cert_command.rb
 test/rubygems/test_gem_commands_check_command.rb
+test/rubygems/test_gem_commands_cleanup_command.rb
 test/rubygems/test_gem_commands_contents_command.rb
 test/rubygems/test_gem_commands_dependency_command.rb
 test/rubygems/test_gem_commands_environment_command.rb
 test/rubygems/test_gem_commands_fetch_command.rb
 test/rubygems/test_gem_commands_generate_index_command.rb
+test/rubygems/test_gem_commands_help_command.rb
 test/rubygems/test_gem_commands_install_command.rb
 test/rubygems/test_gem_commands_list_command.rb
 test/rubygems/test_gem_commands_lock_command.rb
@@ -174,6 +174,7 @@ test/rubygems/test_gem_package_tar_reader.rb
 test/rubygems/test_gem_package_tar_reader_entry.rb
 test/rubygems/test_gem_package_tar_writer.rb
 test/rubygems/test_gem_package_task.rb
+test/rubygems/test_gem_path_support.rb
 test/rubygems/test_gem_platform.rb
 test/rubygems/test_gem_remote_fetcher.rb
 test/rubygems/test_gem_requirement.rb
@@ -191,4 +192,3 @@ test/rubygems/test_gem_version.rb
 test/rubygems/test_gem_version_option.rb
 test/rubygems/test_kernel.rb
 util/CL2notes
-util/gem_prelude.rb
