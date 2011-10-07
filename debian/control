@@ -2,7 +2,7 @@ Source: rubygems
 Section: ruby
 Priority: optional
 Maintainer: Daigo Moriwaki <daigo@debian.org>
-Uploaders: Debian Ruby Extras Maintainers <pkg-ruby-extras-maintainers@lists.alioth.debian.org>, Lucas Nussbaum <lucas@lucas-nussbaum.net>
+Uploaders: Debian Ruby Extras Maintainers <pkg-ruby-extras-maintainers@lists.alioth.debian.org>, Lucas Nussbaum <lucas@debian.org>
 DM-Upload-Allowed: yes
 Build-Depends: debhelper (>= 7.0.50~), gem2deb (>= 0.2.2), rake, ruby-minitest
 Standards-Version: 3.9.1
