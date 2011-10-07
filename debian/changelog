@@ -10,8 +10,9 @@ rubygems (1.8.10-1) unstable; urgency=low
     + disable-failing-tests.diff: refresh.
     + disable-tests-failing-as-root.diff: refresh.
   * Bump standards-version to 3.9.2. No changes needed.
+  * disable-failing-tests.diff: add more failing tests.
 
- -- Lucas Nussbaum <lucas@debian.org>  Fri, 07 Oct 2011 14:09:03 +0200
+ -- Lucas Nussbaum <lucas@debian.org>  Fri, 07 Oct 2011 14:40:18 +0200
 
 rubygems (1.7.2-1) unstable; urgency=low
 
