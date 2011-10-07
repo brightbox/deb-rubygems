@@ -19,6 +19,15 @@ Description: disable tests that are failing due to Debian-specific modifications
      assert_match @default_dir_re, Gem.default_dir
    end
  
+@@ -807,7 +807,7 @@ class TestGem < Gem::TestCase
+     assert_equal [Gem::Platform::RUBY, Gem::Platform.local], Gem.platforms
+   end
+ 
+-  def test_self_prefix
++  def est_self_prefix
+     assert_equal @@project_dir, Gem.prefix
+   end
+ 
 --- a/test/rubygems/test_gem_commands_update_command.rb
 +++ b/test/rubygems/test_gem_commands_update_command.rb
 @@ -83,7 +83,7 @@ class TestGemCommandsUpdateCommand < Gem
@@ -75,3 +84,25 @@ Description: disable tests that are failing due to Debian-specific modifications
      @cmd.options[:args]          = %w[gem]
      @cmd.options[:system]        = true
      @cmd.options[:generate_rdoc] = false
+--- a/test/rubygems/test_gem_commands_cleanup_command.rb
++++ b/test/rubygems/test_gem_commands_cleanup_command.rb
+@@ -55,7 +55,7 @@ class TestGemCommandsCleanupCommand < Ge
+     refute_path_exists @a_1_1.gem_dir
+   end
+ 
+-  def test_execute_all_user_no_sudo
++  def est_execute_all_user_no_sudo
+     FileUtils.chmod 0555, @gemhome
+ 
+     @a_1_1 = quick_spec 'a', '1.1'
+--- a/test/rubygems/test_gem_commands_environment_command.rb
++++ b/test/rubygems/test_gem_commands_environment_command.rb
+@@ -9,7 +9,7 @@ class TestGemCommandsEnvironmentCommand
+     @cmd = Gem::Commands::EnvironmentCommand.new
+   end
+ 
+-  def test_execute
++  def est_execute
+     orig_sources = Gem.sources.dup
+     Gem.sources.replace %w[http://gems.example.com]
+     Gem.configuration['gemcutter_key'] = 'blah'
