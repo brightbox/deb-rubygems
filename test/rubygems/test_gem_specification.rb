@@ -29,8 +29,8 @@ Gem::Specification.new do |s|
   s.version = %q{0.4.0}
   s.has_rdoc = true
   s.summary = %q{A Hash which automatically computes keys.}
-  s.files = ["lib/keyedlist.rb"]
-  s.require_paths = ["lib"]
+  s.files = [%q{lib/keyedlist.rb}]
+  s.require_paths = [%q{lib}]
   s.autorequire = %q{keyedlist}
   s.author = %q{Florian Gross}
   s.email = %q{flgr@ccan.de}
@@ -114,10 +114,103 @@ end
     assert_equal @current_version, new_spec.specification_version
   end
 
+  def test_self_from_yaml_syck_date_bug
+    # This is equivalent to (and totally valid) psych 1.0 output and
+    # causes parse errors on syck.
+    yaml = @a1.to_yaml
+    yaml.sub!(/^date:.*/, "date: 2011-04-26 00:00:00.000000000Z")
+
+    new_spec = with_syck do
+      Gem::Specification.from_yaml yaml
+    end
+
+    assert_kind_of Time, @a1.date
+    assert_kind_of Time, new_spec.date
+  end
+
+  def test_self_from_yaml_syck_default_key_bug
+    skip 'syck default_key bug is only for ruby 1.8' unless RUBY_VERSION < '1.9'
+    # This is equivalent to (and totally valid) psych 1.0 output and
+    # causes parse errors on syck.
+    yaml = <<-YAML
+--- !ruby/object:Gem::Specification
+name: posix-spawn
+version: !ruby/object:Gem::Version
+  version: 0.3.6
+  prerelease: 
+dependencies:
+- !ruby/object:Gem::Dependency
+  name: rake-compiler
+  requirement: &70243867725240 !ruby/object:Gem::Requirement
+    none: false
+    requirements:
+    - - =
+      - !ruby/object:Gem::Version
+        version: 0.7.6
+  type: :development
+  prerelease: false
+  version_requirements: *70243867725240
+platform: ruby
+files: []
+test_files: []
+bindir:
+    YAML
+
+    new_spec = with_syck do
+      Gem::Specification.from_yaml yaml
+    end
+
+    refute_match %r%DefaultKey%, new_spec.to_ruby
+  end
+
   def test_self_load
-    full_path = File.join @gemhome, 'specifications', @a2.spec_name
-    path      = File.join "specifications", @a2.spec_name
-    write_file path do |io|
+    full_path = @a2.spec_file
+    write_file full_path do |io|
+      io.write @a2.to_ruby_for_cache
+    end
+
+    spec = Gem::Specification.load full_path
+
+    @a2.files.clear
+
+    assert_equal @a2, spec
+  end
+
+  def test_self_load_escape_curly
+    @a2.name = 'a};raise "improper escaping";%q{'
+
+    full_path = @a2.spec_file
+    write_file full_path do |io|
+      io.write @a2.to_ruby_for_cache
+    end
+
+    spec = Gem::Specification.load full_path
+
+    @a2.files.clear
+
+    assert_equal @a2, spec
+  end
+
+  def test_self_load_escape_interpolation
+    @a2.name = 'a#{raise %<improper escaping>}'
+
+    full_path = @a2.spec_file
+    write_file full_path do |io|
+      io.write @a2.to_ruby_for_cache
+    end
+
+    spec = Gem::Specification.load full_path
+
+    @a2.files.clear
+
+    assert_equal @a2, spec
+  end
+
+  def test_self_load_escape_quote
+    @a2.name = 'a";raise "improper escaping";"'
+
+    full_path = @a2.spec_file
+    write_file full_path do |io|
       io.write @a2.to_ruby_for_cache
     end
 
@@ -306,6 +399,16 @@ end
     assert_equal 'old_platform', same_spec.original_platform
   end
 
+  def test_activate
+    @a2.activate
+
+    assert @a2.activated?
+
+    Deprecate.skip_during do
+      assert @a2.loaded?
+    end
+  end
+
   def test_add_dependency_with_explicit_type
     gem = quick_spec "awesome", "1.0" do |awesome|
       awesome.add_development_dependency "monkey"
@@ -392,51 +495,20 @@ end
   end
 
   def test_eql_eh
-    g1 = quick_spec 'gem'
-    g2 = quick_spec 'gem'
+    g1 = new_spec 'gem', 1
+    g2 = new_spec 'gem', 1
 
     assert_equal g1, g2
     assert_equal g1.hash, g2.hash
     assert_equal true, g1.eql?(g2)
   end
 
-  def test_equals2
-    assert_equal @a1, @a1
-    assert_equal @a1, @a1.dup
-    refute_equal @a1, @a2
-    refute_equal @a1, Object.new
-  end
-
-  # The cgikit specification was reported to be causing trouble in at least
-  # one version of RubyGems, so we test explicitly for it.
-  def test_equals2_cgikit
-    cgikit = Gem::Specification.new do |s|
-      s.name = %q{cgikit}
-      s.version = "1.1.0"
-      s.date = %q{2004-03-13}
-      s.summary = %q{CGIKit is a componented-oriented web application } +
-      %q{framework like Apple Computers WebObjects.  } +
-      %{This framework services Model-View-Controller architecture } +
-      %q{programming by components based on a HTML file, a definition } +
-      %q{file and a Ruby source.  }
-      s.email = %q{info@spice-of-life.net}
-      s.homepage = %q{http://www.spice-of-life.net/download/cgikit/}
-      s.autorequire = %q{cgikit}
-      s.bindir = nil
-      s.required_ruby_version = nil
-      s.platform = nil
-      s.files = ["lib/cgikit", "lib/cgikit.rb", "lib/cgikit/components", "..."]
-    end
-
-    assert_equal cgikit, cgikit
-  end
-
-  def test_equals2_extensions
+  def test_eql_eh_extensions
     spec = @a1.dup
     spec.extensions = 'xx'
 
-    refute_equal @a1, spec
-    refute_equal spec, @a1
+    refute_operator @a1, :eql?, spec
+    refute_operator spec, :eql?, @a1
   end
 
   def test_executables
@@ -562,11 +634,11 @@ end
   end
 
   def test_full_gem_path_double_slash
-    gemhome = @gemhome.sub(/\w\//, '\&/')
-    @a1.loaded_from = File.join gemhome, 'specifications', @a1.spec_name
+    gemhome = @gemhome.to_s.sub(/\w\//, '\&/')
+    @a1.loaded_from = File.join gemhome, "specifications", @a1.spec_name
 
-    assert_equal File.join(@gemhome, 'gems', @a1.full_name),
-                 @a1.full_gem_path
+    expected = File.join @gemhome, "gems", @a1.full_name
+    assert_equal expected, @a1.full_gem_path
   end
 
   def test_full_name
@@ -605,15 +677,14 @@ end
   end
 
   def test_installation_path
-    assert_equal @gemhome, @a1.installation_path
+    Deprecate.skip_during do
+      assert_equal @gemhome, @a1.installation_path
 
-    @a1.instance_variable_set :@loaded_from, nil
+      @a1.instance_variable_set :@loaded_from, nil
+      @a1.instance_variable_set :@loaded, false
 
-    e = assert_raises Gem::Exception do
-      @a1.installation_path
+      assert_nil @a1.installation_path
     end
-
-    assert_equal 'spec a-1 is not from an installed gem', e.message
   end
 
   def test_lib_files
@@ -711,8 +782,8 @@ end
   end
 
   def test_spaceship_name
-    s1 = quick_spec 'a', '1'
-    s2 = quick_spec 'b', '1'
+    s1 = new_spec 'a', '1'
+    s2 = new_spec 'b', '1'
 
     assert_equal(-1, (s1 <=> s2))
     assert_equal( 0, (s1 <=> s1))
@@ -720,8 +791,8 @@ end
   end
 
   def test_spaceship_platform
-    s1 = quick_spec 'a', '1'
-    s2 = quick_spec 'a', '1' do |s|
+    s1 = new_spec 'a', '1'
+    s2 = new_spec 'a', '1' do |s|
       s.platform = Gem::Platform.new 'x86-my_platform1'
     end
 
@@ -731,8 +802,8 @@ end
   end
 
   def test_spaceship_version
-    s1 = quick_spec 'a', '1'
-    s2 = quick_spec 'a', '2'
+    s1 = new_spec 'a', '1'
+    s2 = new_spec 'a', '2'
 
     assert_equal( -1, (s1 <=> s2))
     assert_equal(  0, (s1 <=> s1))
@@ -763,19 +834,19 @@ end
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{a}
-  s.version = \"2\"
+  s.name = "a"
+  s.version = "2"
 
   s.required_rubygems_version = Gem::Requirement.new(\"> 0\") if s.respond_to? :required_rubygems_version=
-  s.authors = [\"A User\"]
-  s.date = %q{#{Gem::Specification::TODAY.strftime "%Y-%m-%d"}}
-  s.description = %q{This is a test description}
-  s.email = %q{example@example.com}
-  s.files = [\"lib/code.rb\"]
-  s.homepage = %q{http://example.com}
-  s.require_paths = [\"lib\"]
-  s.rubygems_version = %q{#{Gem::VERSION}}
-  s.summary = %q{this is a summary}
+  s.authors = ["A User"]
+  s.date = "#{Gem::Specification::TODAY.strftime "%Y-%m-%d"}"
+  s.description = "This is a test description"
+  s.email = "example@example.com"
+  s.files = ["lib/code.rb"]
+  s.homepage = "http://example.com"
+  s.require_paths = ["lib"]
+  s.rubygems_version = "#{Gem::VERSION}"
+  s.summary = "this is a summary"
 
   if s.respond_to? :specification_version then
     s.specification_version = #{Gem::Specification::CURRENT_SPECIFICATION_VERSION}
@@ -810,18 +881,18 @@ end
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{a}
-  s.version = \"2\"
+  s.name = "a"
+  s.version = "2"
 
   s.required_rubygems_version = Gem::Requirement.new(\"> 0\") if s.respond_to? :required_rubygems_version=
-  s.authors = [\"A User\"]
-  s.date = %q{#{Gem::Specification::TODAY.strftime "%Y-%m-%d"}}
-  s.description = %q{This is a test description}
-  s.email = %q{example@example.com}
-  s.homepage = %q{http://example.com}
-  s.require_paths = [\"lib\"]
-  s.rubygems_version = %q{#{Gem::VERSION}}
-  s.summary = %q{this is a summary}
+  s.authors = ["A User"]
+  s.date = "#{Gem::Specification::TODAY.strftime "%Y-%m-%d"}"
+  s.description = "This is a test description"
+  s.email = "example@example.com"
+  s.homepage = "http://example.com"
+  s.require_paths = ["lib"]
+  s.rubygems_version = "#{Gem::VERSION}"
+  s.summary = "this is a summary"
 
   if s.respond_to? :specification_version then
     s.specification_version = #{Gem::Specification::CURRENT_SPECIFICATION_VERSION}
@@ -857,26 +928,26 @@ end
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{a}
-  s.version = \"1\"
+  s.name = "a"
+  s.version = "1"
   s.platform = Gem::Platform.new(#{expected_platform})
 
   s.required_rubygems_version = Gem::Requirement.new(\">= 0\") if s.respond_to? :required_rubygems_version=
-  s.authors = [\"A User\"]
-  s.date = %q{#{Gem::Specification::TODAY.strftime "%Y-%m-%d"}}
-  s.description = %q{This is a test description}
-  s.email = %q{example@example.com}
-  s.executables = [\"exec\"]
-  s.extensions = [\"ext/a/extconf.rb\"]
-  s.files = [\"lib/code.rb\", \"test/suite.rb\", \"bin/exec\", \"ext/a/extconf.rb\"]
-  s.homepage = %q{http://example.com}
-  s.licenses = [\"MIT\"]
-  s.require_paths = [\"lib\"]
-  s.requirements = [\"A working computer\"]
-  s.rubyforge_project = %q{example}
-  s.rubygems_version = %q{#{Gem::VERSION}}
-  s.summary = %q{this is a summary}
-  s.test_files = [\"test/suite.rb\"]
+  s.authors = ["A User"]
+  s.date = "#{Gem::Specification::TODAY.strftime "%Y-%m-%d"}"
+  s.description = "This is a test description"
+  s.email = "example@example.com"
+  s.executables = ["exec"]
+  s.extensions = ["ext/a/extconf.rb"]
+  s.files = ["lib/code.rb", "test/suite.rb", "bin/exec", "ext/a/extconf.rb"]
+  s.homepage = "http://example.com"
+  s.licenses = ["MIT"]
+  s.require_paths = ["lib"]
+  s.requirements = ["A working computer"]
+  s.rubyforge_project = "example"
+  s.rubygems_version = "#{Gem::VERSION}"
+  s.summary = "this is a summary"
+  s.test_files = ["test/suite.rb"]
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
@@ -931,7 +1002,7 @@ end
 
     refute_match '!!null', yaml_str
 
-    same_spec = YAML.load(yaml_str)
+    same_spec = Gem::Specification.from_yaml(yaml_str)
 
     assert_equal @a1, same_spec
   end
@@ -940,7 +1011,7 @@ end
     @a1.platform = Gem::Platform.local
     yaml_str = @a1.to_yaml
 
-    same_spec = YAML.load(yaml_str)
+    same_spec = Gem::Specification.from_yaml(yaml_str)
 
     assert_equal Gem::Platform.local, same_spec.platform
 
@@ -988,7 +1059,7 @@ end
     util_setup_validate
 
     Dir.chdir @tempdir do
-      @a1.authors = []
+      @a1.authors = [""]
 
       use_ui @ui do
         @a1.validate
@@ -998,11 +1069,13 @@ end
 
       @a1.authors = [Object.new]
 
+      assert_equal [], @a1.authors
+
       e = assert_raises Gem::InvalidSpecificationException do
         @a1.validate
       end
 
-      assert_equal "authors must be an Array of String instances", e.message
+      assert_equal "authors may not be empty", e.message
 
       @a1.authors = ["#{f} (who is writing this software)"]
 
@@ -1328,6 +1401,67 @@ end
     specfile.delete
   end
 
+  ##
+  # KEEP p-1-x86-darwin-8
+  # KEEP p-1
+  # KEEP c-1.2
+  # KEEP a_evil-9
+  #      a-1
+  #      a-1-x86-my_platform-1
+  # KEEP a-2
+  #      a-2-x86-other_platform-1
+  # KEEP a-2-x86-my_platform-1
+  #      a-3.a
+  # KEEP a-3-x86-other_platform-1
+
+  def test_latest_specs
+    util_clear_gems
+    util_setup_fake_fetcher
+
+    quick_spec 'p', '1'
+
+    p1_curr = quick_spec 'p', '1' do |spec|
+      spec.platform = Gem::Platform::CURRENT
+    end
+
+    quick_spec @a1.name, @a1.version do |s|
+      s.platform = Gem::Platform.new 'x86-my_platform1'
+    end
+
+    quick_spec @a1.name, @a1.version do |s|
+      s.platform = Gem::Platform.new 'x86-third_platform1'
+    end
+
+    quick_spec @a2.name, @a2.version do |s|
+      s.platform = Gem::Platform.new 'x86-my_platform1'
+    end
+
+    quick_spec @a2.name, @a2.version do |s|
+      s.platform = Gem::Platform.new 'x86-other_platform1'
+    end
+
+    quick_spec @a2.name, @a2.version.bump do |s|
+      s.platform = Gem::Platform.new 'x86-other_platform1'
+    end
+
+    Gem::Specification.remove_spec @b2
+    Gem::Specification.remove_spec @pl1
+
+    expected = %W[
+                  a-2
+                  a-2-x86-my_platform-1
+                  a-3-x86-other_platform-1
+                  a_evil-9
+                  c-1.2
+                  p-1
+                  #{p1_curr.full_name}
+                 ]
+
+    latest_specs = Gem::Specification.latest_specs.map(&:full_name).sort
+
+    assert_equal expected, latest_specs
+  end
+
   def util_setup_deps
     @gem = quick_spec "awesome", "1.0" do |awesome|
       awesome.add_runtime_dependency "bonobo", []
@@ -1352,6 +1486,24 @@ end
       File.open "bin/exec", "w" do |fp|
         fp.puts "#!#{Gem.ruby}"
       end
+    end
+  end
+
+  def with_syck
+    begin
+      require "yaml"
+      old_engine = YAML::ENGINE.yamler
+      YAML::ENGINE.yamler = 'syck'
+    rescue NameError
+      # probably on 1.8, ignore
+    end
+
+    yield
+  ensure
+    begin
+      YAML::ENGINE.yamler = old_engine
+    rescue NameError
+      # ignore
     end
   end
 end

@@ -7,7 +7,7 @@
 @DPATCH@
 --- a/lib/rubygems/defaults.rb
 +++ b/lib/rubygems/defaults.rb
-@@ -15,18 +15,15 @@ module Gem
+@@ -17,30 +17,15 @@ module Gem
    ##
    # Default home directory path to be used if an alternate value is not
    # specified in the environment
@@ -19,21 +19,33 @@
 +  #
  
    def self.default_dir
--    if defined? RUBY_FRAMEWORK_VERSION then
--      File.join File.dirname(ConfigMap[:sitedir]), 'Gems',
--                ConfigMap[:ruby_version]
--    elsif ConfigMap[:rubylibprefix] then
--      File.join(ConfigMap[:rubylibprefix], 'gems',
--                ConfigMap[:ruby_version])
--    else
--      File.join(ConfigMap[:libdir], ruby_engine, 'gems',
--                ConfigMap[:ruby_version])
--    end
-+    File.join('/', 'var', 'lib', 'gems', ConfigMap[:ruby_version])
+-    path = if defined? RUBY_FRAMEWORK_VERSION then
+-             [
+-               File.dirname(ConfigMap[:sitedir]),
+-               'Gems',
+-               ConfigMap[:ruby_version]
+-             ]
+-           elsif ConfigMap[:rubylibprefix] then
+-             [
+-              ConfigMap[:rubylibprefix],
+-              'gems',
+-              ConfigMap[:ruby_version]
+-             ]
+-           else
+-             [
+-               ConfigMap[:libdir],
+-               ruby_engine,
+-               'gems',
+-               ConfigMap[:ruby_version]
+-             ]
+-           end
+-
+-    @default_dir ||= File.join(*path)
++    @default_dir ||= File.join('/', 'var', 'lib', 'gems', ConfigMap[:ruby_version])
    end
  
    ##
-@@ -63,13 +60,11 @@ module Gem
+@@ -77,13 +62,11 @@ module Gem
  
    ##
    # The default directory for binaries

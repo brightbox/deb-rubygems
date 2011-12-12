@@ -17,6 +17,47 @@ class TestGemCommandsUninstallCommand < Gem::InstallerTestCase
     @executable = File.join(@gemhome, 'bin', 'executable')
   end
 
+  def test_execute_mulitple
+    @other = quick_gem 'c'
+    util_make_exec @other
+    util_build_gem @other
+
+    @other_installer = util_installer @other, @gemhome
+
+    ui = Gem::MockGemUi.new
+    util_setup_gem ui
+
+    build_rake_in do
+      use_ui ui do
+        @other_installer.install
+      end
+    end
+
+    @cmd.options[:args] = [@spec.name, @other.name]
+
+    use_ui @ui do
+      @cmd.execute
+    end
+
+    output = @ui.output.split "\n"
+
+    assert_includes output, "Successfully uninstalled #{@spec.full_name}"
+    assert_includes output, "Successfully uninstalled #{@other.full_name}"
+  end
+
+  def test_execute_mulitple_nonexistent
+    @cmd.options[:args] = %w[x y]
+
+    use_ui @ui do
+      @cmd.execute
+    end
+
+    output = @ui.output.split "\n"
+
+    assert_includes output, 'INFO:  gem "x" is not installed'
+    assert_includes output, 'INFO:  gem "y" is not installed'
+  end
+
   def test_execute_removes_executable
     ui = Gem::MockGemUi.new
     util_setup_gem ui
@@ -69,19 +110,6 @@ class TestGemCommandsUninstallCommand < Gem::InstallerTestCase
     Gem::Installer.exec_format = nil
   end
 
-  def test_execute_not_installed
-    @cmd.options[:args] = ["foo"]
-    e = assert_raises Gem::InstallError do
-      use_ui @ui do
-        @cmd.execute
-      end
-    end
-
-    assert_match(/\Acannot uninstall, check `gem list -d foo`$/, e.message)
-    output = @ui.output.split "\n"
-    assert_empty output, "UI output should be empty after an uninstall error"
-  end
-
   def test_execute_prerelease
     @spec = quick_spec "pre", "2.b"
     @gem = File.join @tempdir, @spec.file_name
@@ -104,5 +132,6 @@ class TestGemCommandsUninstallCommand < Gem::InstallerTestCase
     output = @ui.output
     assert_match(/Successfully uninstalled/, output)
   end
+
 end
 

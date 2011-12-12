@@ -1,3 +1,19 @@
+rubygems (1.8.10-1) unstable; urgency=low
+
+  * debian/watch: point to rubygems.org
+  * debian/copyright: change to a working url in Format: field
+  * Add build-dependency on ruby-minitest.
+  * switch to my @d.o email.
+  * Refresh patches:
+    + 08_tighter_search_regex.diff: drop.
+    + 01_default_gem_path.diff: refresh.
+    + disable-failing-tests.diff: refresh.
+    + disable-tests-failing-as-root.diff: refresh.
+  * Bump standards-version to 3.9.2. No changes needed.
+  * disable-failing-tests.diff: add more failing tests.
+
+ -- Lucas Nussbaum <lucas@debian.org>  Fri, 07 Oct 2011 14:40:18 +0200
+
 rubygems (1.7.2-1bbox2) lucid; urgency=low
 
   * Ignore some test failures, needed for Ubuntu Lucid build

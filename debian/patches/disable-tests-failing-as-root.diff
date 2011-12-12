@@ -1,7 +1,7 @@
 Description: disable tests that are failing when running as root (which is the case when building the package with fakeroot)
 --- a/test/rubygems/test_gem.rb
 +++ b/test/rubygems/test_gem.rb
-@@ -581,7 +581,7 @@ class TestGem < Gem::TestCase
+@@ -625,7 +625,7 @@ class TestGem < Gem::TestCase
    end
  
    unless win_platform? then # only for FS that support write protection
@@ -10,7 +10,7 @@ Description: disable tests that are failing when running as root (which is the c
        gemdir = File.join @tempdir, "egd"
        FileUtils.rm_r gemdir rescue nil
        refute File.exist?(gemdir), "manually remove #{gemdir}, tests are broken"
-@@ -596,7 +596,7 @@ class TestGem < Gem::TestCase
+@@ -640,7 +640,7 @@ class TestGem < Gem::TestCase
        FileUtils.chmod 0600, gemdir
      end
  
@@ -38,13 +38,13 @@ Description: disable tests that are failing when running as root (which is the c
  
 -  def test_uninstall_doc_unwritable
 +  def est_uninstall_doc_unwritable
-     path = @spec.installation_path
+     path = @spec.base_dir
      orig_mode = File.stat(path).mode
  
 --- a/test/rubygems/test_gem_install_update_options.rb
 +++ b/test/rubygems/test_gem_install_update_options.rb
-@@ -45,7 +45,7 @@ class TestGemInstallUpdateOptions < Gem:
-                                  @spec.full_name))
+@@ -44,7 +44,7 @@ class TestGemInstallUpdateOptions < Gem:
+     assert_path_exists File.join(Gem.user_dir, 'gems', @spec.full_name)
    end
  
 -  def test_user_install_disabled_read_only
@@ -54,7 +54,7 @@ Description: disable tests that are failing when running as root (which is the c
      else
 --- a/test/rubygems/test_gem_installer.rb
 +++ b/test/rubygems/test_gem_installer.rb
-@@ -264,7 +264,7 @@ load Gem.bin_path('a', 'executable', ver
+@@ -303,7 +303,7 @@ load Gem.bin_path('a', 'executable', ver
      refute File.exist?(util_inst_bindir), 'bin dir was created when not needed'
    end
  
@@ -63,7 +63,7 @@ Description: disable tests that are failing when running as root (which is the c
      @installer.wrappers = true
      util_make_exec
  
-@@ -355,7 +355,7 @@ load Gem.bin_path('a', 'executable', ver
+@@ -394,7 +394,7 @@ load Gem.bin_path('a', 'executable', ver
      refute File.exist?(util_inst_bindir)
    end
  
@@ -74,7 +74,7 @@ Description: disable tests that are failing when running as root (which is the c
      @installer.gem_dir = util_gem_dir
 --- a/test/rubygems/test_gem_remote_fetcher.rb
 +++ b/test/rubygems/test_gem_remote_fetcher.rb
-@@ -269,7 +269,7 @@ gems:
+@@ -265,7 +265,7 @@ gems:
    end
  
    unless win_platform? # File.chmod doesn't work
@@ -83,12 +83,12 @@ Description: disable tests that are failing when running as root (which is the c
        FileUtils.mv @a1_gem, @tempdir
        local_path = File.join @tempdir, @a1.file_name
        inst = nil
-@@ -285,7 +285,7 @@ gems:
-       File.chmod 0755, Gem.cache_dir(@gemhome)
+@@ -281,7 +281,7 @@ gems:
+       FileUtils.chmod 0755, @a1.cache_dir
      end
  
 -    def test_download_read_only
 +    def est_download_read_only
-       File.chmod 0555, Gem.cache_dir(@gemhome)
-       File.chmod 0555, File.join(@gemhome)
+       FileUtils.chmod 0555, @a1.cache_dir
+       FileUtils.chmod 0555, @gemhome
  

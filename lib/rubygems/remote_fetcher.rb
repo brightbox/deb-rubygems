@@ -80,11 +80,12 @@ class Gem::RemoteFetcher
   # larger, more emcompassing effort. -erikh
 
   def download_to_cache dependency
-    found = Gem::SpecFetcher.fetcher.fetch dependency
+    found = Gem::SpecFetcher.fetcher.fetch dependency, true, true,
+                                           dependency.prerelease?
 
     return if found.empty?
 
-    spec, source_uri = found.first
+    spec, source_uri = found.sort_by { |(s,_)| s.version }.last
 
     download spec, source_uri
   end
@@ -98,12 +99,12 @@ class Gem::RemoteFetcher
     Gem.ensure_gem_subdirectories(install_dir) rescue nil
 
     if File.writable?(install_dir)
-      cache_dir = Gem.cache_dir(install_dir)
+      cache_dir = File.join install_dir, "cache"
     else
-      cache_dir = Gem.cache_dir(Gem.user_dir)
+      cache_dir = File.join Gem.user_dir, "cache"
     end
 
-    gem_file_name = spec.file_name
+    gem_file_name = File.basename spec.cache_file
     local_gem_path = File.join cache_dir, gem_file_name
 
     FileUtils.mkdir_p cache_dir rescue nil unless File.exist? cache_dir
@@ -111,8 +112,8 @@ class Gem::RemoteFetcher
    # Always escape URI's to deal with potential spaces and such
     unless URI::Generic === source_uri
       source_uri = URI.parse(URI.const_defined?(:DEFAULT_PARSER) ?
-                             URI::DEFAULT_PARSER.escape(source_uri) :
-                             URI.escape(source_uri))
+                             URI::DEFAULT_PARSER.escape(source_uri.to_s) :
+                             URI.escape(source_uri.to_s))
     end
 
     scheme = source_uri.scheme
