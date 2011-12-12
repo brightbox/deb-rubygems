@@ -1,3 +1,9 @@
+rubygems (1.8.10-1bbox1) lucid; urgency=low
+
+  * Backported to Ubuntu Lucid
+
+ -- John Leach <john@brightbox.co.uk>  Mon, 12 Dec 2011 21:34:32 +0000
+
 rubygems (1.8.10-1) unstable; urgency=low
 
   * debian/watch: point to rubygems.org
