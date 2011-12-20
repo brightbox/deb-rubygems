@@ -118,7 +118,7 @@ require "rubygems/deprecate"
 # -The RubyGems Team
 
 module Gem
-  VERSION = '1.8.10'
+  VERSION = '1.8.12'
 
   ##
   # Raised when RubyGems is unable to load or activate a gem.  Contains the
@@ -658,16 +658,9 @@ module Gem
       require 'yaml'
     end
 
-    # Hack to handle syck's DefaultKey bug with psych.
-    # See the note at the top of lib/rubygems/requirement.rb for
-    # why we end up defining DefaultKey more than once.
-    if !defined? YAML::Syck
-      YAML.module_eval do
-          const_set 'Syck', Module.new {
-            const_set 'DefaultKey', Class.new
-          }
-        end
-    end
+    # Now that we're sure some kind of yaml library is loaded, pull
+    # in our hack to deal with Syck's DefaultKey ugliness.
+    require 'rubygems/syck_hack'
   end
 
   ##
@@ -956,7 +949,7 @@ module Gem
   # Returns the Gem::SourceIndex of specifications that are in the Gem.path
 
   def self.source_index
-    @@source_index ||= Deprecate.skip_during do
+    @@source_index ||= Gem::Deprecate.skip_during do
       SourceIndex.new Gem::Specification.dirs
     end
   end
@@ -1262,7 +1255,7 @@ require 'rubygems/custom_require'
 
 module Gem
   class << self
-    extend Deprecate
+    extend Gem::Deprecate
     deprecate :activate_dep,          "Specification#activate", 2011,  6
     deprecate :activate_spec,         "Specification#activate", 2011,  6
     deprecate :cache,                 "Gem::source_index",      2011,  8
