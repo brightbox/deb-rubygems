@@ -32,7 +32,8 @@ Description: package management framework for Ruby libraries/applications
  provided with the interpreter.
 
 Package: rubygems1.8
-Section: oldlibs-extra
+Section: oldlibs
+Priority: extra
 Architecture: all
 Depends: ${misc:Depends}, rubygems
 Description: Transitional package for rubygems
@@ -40,7 +41,8 @@ Description: Transitional package for rubygems
  package. It can safely be removed.
 
 Package: rubygems-doc
-Section: oldlibs-extra
+Section: oldlibs
+Priority: extra
 Architecture: all
 Depends: ${misc:Depends}, rubygems
 Description: Transitional package for rubygems
