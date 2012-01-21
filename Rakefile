@@ -73,7 +73,7 @@ task :rake_sucks do
   unless ENV['RAKE_SUCKS'] then
     ENV['RAKE_SUCKS'] = "1"
     rm_rf "doc"
-    sh "#{Gem.ruby} #{Gem.bin_path 'rake', 'rake'} -t docs"
+    sh "rake docs"
   end
 end
 

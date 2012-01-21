@@ -484,6 +484,8 @@ class Gem::Specification
   # +input+ can be anything that YAML.load() accepts: String or IO.
 
   def self.from_yaml(input)
+    Gem.load_yaml
+
     input = normalize_yaml_input input
     spec = YAML.load input
 
@@ -756,8 +758,16 @@ class Gem::Specification
 
   def activate_dependencies
     self.runtime_dependencies.each do |spec_dep|
-      # TODO: check for conflicts! not just name!
-      next if Gem.loaded_specs.include? spec_dep.name
+      if loaded = Gem.loaded_specs[spec_dep.name]
+        next if spec_dep.matches_spec? loaded
+
+        msg = "can't satisfy '#{spec_dep}', already activated '#{loaded.full_name}'"
+        e = Gem::LoadError.new msg
+        e.name = spec_dep.name
+
+        raise e
+      end
+
       specs = spec_dep.to_specs
 
       if specs.size == 1 then
