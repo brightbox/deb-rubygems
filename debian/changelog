@@ -1,3 +1,9 @@
+rubygems (1.8.15-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Daigo Moriwaki <daigo@debian.org>  Sat, 21 Jan 2012 16:04:00 +0900
+
 rubygems (1.8.12-2) unstable; urgency=low
 
   * debian/control: Build-Depends netbase as well to pass test cases.
