@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Daigo Moriwaki <daigo@debian.org>
 Uploaders: Debian Ruby Extras Maintainers <pkg-ruby-extras-maintainers@lists.alioth.debian.org>, Lucas Nussbaum <lucas@debian.org>
 DM-Upload-Allowed: yes
-Build-Depends: debhelper (>= 7.0.50~), gem2deb (>= 0.2.2), rake, ruby-minitest
+Build-Depends: debhelper (>= 7.0.50~), gem2deb (>= 0.2.2), rake, ruby-minitest, netbase
 Standards-Version: 3.9.2
 Vcs-Git: git://git.debian.org/pkg-ruby-extras/rubygems.git
 Vcs-Browser: http://git.debian.org/?p=pkg-ruby-extras/rubygems.git;a=summary
