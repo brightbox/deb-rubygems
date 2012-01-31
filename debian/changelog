@@ -1,3 +1,9 @@
+rubygems (1.8.15-1bbox1) lucid; urgency=low
+
+  * Backported to Lucid
+
+ -- John Leach <john@brightbox.co.uk>  Tue, 31 Jan 2012 21:07:02 +0000
+
 rubygems (1.8.15-1) unstable; urgency=low
 
   * New upstream release.
