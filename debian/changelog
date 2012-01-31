@@ -1,3 +1,26 @@
+rubygems (1.8.15-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Daigo Moriwaki <daigo@debian.org>  Sat, 21 Jan 2012 16:04:00 +0900
+
+rubygems (1.8.12-2) unstable; urgency=low
+
+  * debian/control: Build-Depends netbase as well to pass test cases.
+    Thanks to Daniel Schepler for reporting and resolving this issue.
+    (Closes: #655549)
+  * debian/control: Priority's of rubygems1.8 and rubygems-doc are now
+    extra, fixing lintian warnings.
+  * debian/copyright: Fixed lintian warnings.
+
+ -- Daigo Moriwaki <daigo@debian.org>  Sat, 21 Jan 2012 14:34:29 +0900
+
+rubygems (1.8.12-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Lucas Nussbaum <lucas@debian.org>  Tue, 20 Dec 2011 20:39:19 +0100
+
 rubygems (1.8.10-1bbox1) lucid; urgency=low
 
   * Backported to Ubuntu Lucid
