@@ -2,4 +2,3 @@
 03_disable_update_system.diff
 disable-failing-tests.diff
 fix-shebang.diff
-debian-changes-1.8.21-1bbox1
