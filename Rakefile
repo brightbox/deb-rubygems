@@ -18,7 +18,7 @@ Hoe::RUBY_FLAGS << " --disable-gems" if RUBY_VERSION > "1.9"
 
 Hoe.plugin :minitest
 Hoe.plugin :git
-Hoe.plugin :isolate
+# Hoe.plugin :isolate
 
 hoe = Hoe.spec 'rubygems-update' do
   self.rubyforge_name = 'rubygems'
@@ -56,6 +56,8 @@ hoe = Hoe.spec 'rubygems-update' do
     rdoc_options << "--title=RubyGems #{self.version} Documentation"
   end
 
+  self.rsync_args += " --no-p"
+
   # FIX: this exists because update --system installs the gem and
   # doesn't uninstall it. It should uninstall or better, not install
   # in the first place.
@@ -82,7 +84,7 @@ end
 
 task :prerelease => [:clobber, :check_manifest, :test]
 
-task :postrelease => :publish_docs
+task :postrelease => [:publish_docs, :upload]
 
 pkg_dir_path = "pkg/rubygems-update-#{hoe.version}"
 task :package do
@@ -93,12 +95,22 @@ task :package do
   end
 end
 
+desc "Upload release to rubyforge"
 task :upload_to_rubyforge do
   v = hoe.version
   sh "rubyforge add_release rubygems rubygems #{v} pkg/rubygems-update-#{v}.gem"
   sh "rubyforge add_file rubygems rubygems #{v} pkg/rubygems-#{v}.zip"
   sh "rubyforge add_file rubygems rubygems #{v} pkg/rubygems-#{v}.tgz"
 end
+
+desc "Upload release to gemcutter S3"
+task :upload_to_gemcutter do
+  v = hoe.version
+  sh "s3cmd put -P pkg/rubygems-update-#{v}.gem pkg/rubygems-#{v}.zip pkg/rubygems-#{v}.tgz s3://production.s3.rubygems.org/rubygems/"
+end
+
+desc "Upload release to rubyforge and gemcutter"
+task :upload => [:upload_to_rubyforge, :upload_to_gemcutter]
 
 # Misc Tasks ---------------------------------------------------------
 
