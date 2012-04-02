@@ -1,3 +1,9 @@
+rubygems (1.8.21-1bbox2) oneiric; urgency=low
+
+  * Remove mistakenly added quilt patch
+
+ -- John Leach <john@brightbox.co.uk>  Mon, 02 Apr 2012 15:33:11 +0100
+
 rubygems (1.8.21-1bbox1) lucid; urgency=low
 
   * New upstream release
